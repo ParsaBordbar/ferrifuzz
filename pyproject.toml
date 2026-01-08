@@ -1,0 +1,27 @@
+[project]
+name = "pyfuzzy-rust"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ParsaBordbar", email = "parsab71@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.10.8",
+]
+
+[project.scripts]
+pyfuzzy-rust = "pyfuzzy_rust:main"
+
+[tool.maturin]
+module-name = "pyfuzzy_rust._core"
+python-packages = ["pyfuzzy_rust"]
+python-source = "src"
+
+[tool.uv]
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.rs" }, { file = "Cargo.toml" }, { file = "Cargo.lock" }]
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"

@@ -1,0 +1,167 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Python-generated files
+
+__pycache__/
+*.py[oc]
+*.pyd
+*.pyo
+build/
+dist/
+wheels/
+*.egg-info
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Python type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+
+# Rust-generated files
+
+# Compilation output
+target/
+Cargo.lock  # Uncomment if library (keep if binary)
+
+# Rust testing
+*.profraw
+*.profdata
+
+# Cargo cache
+.cargo/
+*.orig
+
+
+# Maturin / PyO3 specific
+
+# Compiled Python extension modules
+*.so
+*.dylib
+*.dll
+*.pyd
+src/pyfuzzy_rust/_core.abi3.so
+src/pyfuzzy_rust/_core.*.so
+src/pyfuzzy_rust/*.pyd
+src/pyfuzzy_rust/*.dll
+
+# Maturin build artifacts
+maturin.toml
+
+
+# UV specific
+
+.python-version
+uv.lock  # Optional: commit this for reproducible builds
+
+
+# IDE / Editor files
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+
+# OS-specific files
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+
+# Documentation
+
+docs/_build/
+site/
+
+
+# Temporary files
+
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+
+
+# Performance profiling
+
+*.svg  # Flamegraphs
+perf.data
+callgrind.out.*
+massif.out.*
+
+
+# CI/CD
+
+.github/workflows/test-results/
+
+
+# Project-specific (adjust as needed)
+
+# Benchmarking results
+benchmarks/results/
+
+# Test data
+test_data/
+*.test
+
+# Local configuration
+.env
+.env.local
+local_config.toml
