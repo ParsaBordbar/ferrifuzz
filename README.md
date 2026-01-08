@@ -1,8 +1,6 @@
-PyFuzzy-Rust Demo & Test Suite
-============================================================
-Testing Membership Functions
-============================================================
+# PyFuzzy-Rust Demo & Test Suite
 
+### Testing Membership Functions
 TriangularMF(0, 50, 100)
   membership(0) = 0.0
   membership(25) = 0.5
@@ -17,10 +15,7 @@ TrapezoidalMF(0, 20, 80, 100)
   membership(90) = 0.5
   membership(100) = 0.0
 
-============================================================
-Testing Linguistic Variables
-============================================================
-
+### Testing Linguistic Variables
 Variable('temperature', 0, 40, 3 terms)
 Terms: ['cold', 'comfortable', 'hot']
 
@@ -44,10 +39,7 @@ Fuzzify(30.0°C):
   comfortable: 0.000
   hot: 0.333
 
-============================================================
-Testing Simple Fuzzy System (Temperature → Fan)
-============================================================
-
+### Testing Simple Fuzzy System (Temperature → Fan)
 FuzzySystem(1 inputs, 1 outputs, 3 rules)
 
 Inference Results:
@@ -58,10 +50,7 @@ Inference Results:
   Temp:  30.0°C → Fan:  78.6%
   Temp:  35.0°C → Fan:  81.7%
 
-============================================================
-Testing Complex System (Humidity + Temp → Fan)
-============================================================
-
+### Testing Complex System (Humidity + Temp → Fan)
 FuzzySystem(2 inputs, 1 outputs, 4 rules)
 
 Inference Results:
@@ -72,10 +61,7 @@ Inference Results:
   Temp: 30.0°C, Humidity:  70.0% → Fan:  79.3%
   Temp: 25.0°C, Humidity:  50.0% → Fan:  50.0%
 
-============================================================
-Performance Benchmark
-============================================================
-
+### Performance Benchmark
 Iterations: 10000
 Total time: 0.036 seconds
 Per inference: 0.0036 ms
