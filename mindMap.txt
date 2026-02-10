@@ -1,0 +1,98 @@
+                    ┌─────────────────────────────────┐
+                    │   INTERVAL TYPE-2 FUZZY SETS    │
+                    └─────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+            ┌───────▼────────┐            ┌────────▼────────┐
+            │  CORE CONCEPTS │            │  IMPLEMENTATION │
+            └───────┬────────┘            └───────┬─────────┘
+                    │                             │
+        ┌───────────┼───────────┐                 │
+        │           │           │                 │
+    ┌───▼───┐  ┌───▼───┐  ┌───▼───┐               │
+    │ FOU   │  │ UMF   │  │ LMF   │               │
+    │Footpr.│  │Upper  │  │Lower  │               │
+    │of Unc.│  │  MF   │  │  MF   │               │
+    └───────┘  └───────┘  └───────┘               │
+                                                  │
+                    ┌─────────────────────────────┘
+                    │
+        ┌───────────┼───────────┬──────────┬──────────┐
+        │           │           │          │          │
+    ┌───▼───┐  ┌───▼───┐  ┌───▼───┐  ┌──▼───┐  ┌──▼───┐
+    │  MFs  │  │ Fuzz. │  │ Infer.│  │TypeRd│  │Defuzz│
+    │IT2 MFs│  │IT2→[L,│  │Rules  │  │→Type1│  │→Crisp│
+    │       │  │    U] │  │Fire   │  │      │  │      │
+    └───────┘  └───────┘  └───────┘  └──────┘  └──────┘
+
+
+   Type-1 MF                 Interval Type-2 MF
+   ─────────                 ──────────────────
+     ^                         ^    ^
+     │                         │    │
+   μ(x)                      UMF   LMF
+     │                         │    │
+     └── Single value          └────┴── Interval [L, U]
+
+Example:
+Type-1:  μ_warm(25°C) = 0.7
+Type-2:  μ̃_warm(25°C) = [0.6, 0.8]  ← Footprint of Uncertainty (FOU)
+
+
+┌─────────────────────────────────────────────┐
+│ 1. MEMBERSHIP FUNCTIONS                     │
+├─────────────────────────────────────────────┤
+│ ✓ Type-1 (existing):                        │
+│   - TriangularMF                            │
+│   - TrapezoidalMF                           │
+│                                             │
+│ ✓ NEW - Interval Type-2:                    │
+│   - IT2TriangularMF   (UMF + LMF)           │
+│   - IT2TrapezoidalMF  (UMF + LMF)           │
+│   - IT2GaussianMF     (UMF + LMF)           │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ 2. LINGUISTIC VARIABLES                     │
+├─────────────────────────────────────────────┤
+│ ✓ Type-1 Variable (existing)                │
+│ ✓ NEW - IT2 Variable                        │
+│   - Holds IT2 membership functions          │
+│   - Fuzzifies to intervals [L, U]           │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ 3. FUZZY RULES                              │
+├─────────────────────────────────────────────┤
+│ ✓ Type-1 Rule (existing)                    │
+│ ✓ NEW - IT2 Rule                            │
+│   - Works with IT2 variables                │
+│   - Produces interval firing strength       │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ 4. INFERENCE ENGINE                         │
+├─────────────────────────────────────────────┤
+│ ✓ Type-1 Inference (existing)               │
+│ ✓ NEW - IT2 Inference                       │
+│   - Computes interval firing strengths      │
+│   - Aggregates IT2 output sets              │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ 5. TYPE REDUCTION    NEW STEP!              │
+├─────────────────────────────────────────────┤
+│ Convert IT2 output → Type-1 interval        │
+│ Methods:                                    │
+│   - Centroid (Karnik-Mendel)                │
+│   - Center-of-Sets                          │
+│   - Height                                  │
+└─────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────┐
+│ 6. DEFUZZIFICATION                          │
+├─────────────────────────────────────────────┤
+│ Convert Type-1 interval → Crisp value       │
+│ Simply: (L + U) / 2  (average)              │
+└─────────────────────────────────────────────┘
