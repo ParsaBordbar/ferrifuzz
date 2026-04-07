@@ -122,6 +122,30 @@ impl MF for GaussianMF {
     }
 }
 
+#[pyclass]
+#[derive(Clone)]
+pub struct SingletonMF {
+    pub x: f64,
+}
+
+[pymethods]
+impl SingletonMF {
+    #[new]
+    pub fn new(x: f64) -> Self {
+        Self { x }
+    }
+}
+
+impl MF for SingletonMF {
+    fn membership(&self, input_x: f64) -> f64 {
+        if (input_x - self.x).abs() < f64::EPSILON {
+            1.0
+        } else {
+            0.0
+        }
+    }
+}
+
 // TYPE-1 MF ENUM (PYTHON-FRIENDLY)
 #[pyclass]
 #[derive(Clone)]
@@ -129,6 +153,7 @@ pub enum Type1MF {
     Triangular(TriangularMF),
     Trapezoidal(TrapezoidalMF),
     Gaussian(GaussianMF),
+    Singleton(SingletonMF),
 }
 
 #[pymethods]
@@ -138,6 +163,7 @@ impl Type1MF {
             Self::Triangular(mf) => mf.membership(x),
             Self::Trapezoidal(mf) => mf.membership(x),
             Self::Gaussian(mf) => mf.membership(x),
+            Self::Singleton(mf) => mf.membership(x),
         }
     }
 
@@ -146,8 +172,33 @@ impl Type1MF {
             Self::Triangular(_) => "Triangular",
             Self::Trapezoidal(_) => "Trapezoidal",
             Self::Gaussian(_) => "Gaussian",
+            Self::Singleton(_) => "Singleton",
         }
     }
+
+    fn __repr__(&self) -> String {
+        format!("<MembershipFunction: {}>, self.shape()")
+    }
+}
+
+#[pyfunction]
+pub fn tringle(a: f64, b:f64, c:f64) -> PyResult<Type1MF> {
+    Ok(Type1MF::Triangular(TriangularMF::new(a, b, c)?))
+}
+
+#[pyfunction]
+pub fn trapezoid(a: f64, b:f64, c:f64, d:f64) -> PyResult<Type1MF> {
+    Ok(Type1MF::Trapezoidal(TrapezoidalMF::new(a, b, c, d)?))
+}
+
+#[pyfunction]
+pub fn guassian(center: f64, sigma: f64) -> PyResult<Type1> {
+    Ok(Type1MF::Gaussian(GaussianMF::new(center, sigma)?))
+}
+
+#[pyfunction]
+pub fn singleton(x: f64) -> Type1MF {
+    Type1MF::Singleton(SingletonMF::new(x))
 }
 
 // INTERVAL TYPE-2 MF
