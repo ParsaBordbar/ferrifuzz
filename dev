@@ -1,3 +1,2 @@
 #!/bin/sh
-uv sync
-uv run $1
+maturin develop --offline
