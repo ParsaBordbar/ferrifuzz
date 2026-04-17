@@ -1,5 +1,5 @@
 [project]
-name = "pyfuzzy-rust"
+name = "ferrifuzz"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -12,11 +12,11 @@ dependencies = [
 ]
 
 [project.scripts]
-pyfuzzy-rust = "pyfuzzy_rust:main"
+ferrifuzz = "ferrifuzz:main"
 
 [tool.maturin]
-module-name = "pyfuzzy_rust._core"
-python-packages = ["pyfuzzy_rust"]
+module-name = "ferrifuzz._core"
+python-packages = ["ferrifuzz"]
 python-source = "src"
 
 [tool.uv]
