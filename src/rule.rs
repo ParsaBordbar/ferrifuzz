@@ -1,6 +1,6 @@
+use pyo3::class::basic::CompareOp;
 use pyo3::prelude::*;
 use pyo3::types::PyType;
-use pyo3::class::basic::CompareOp;
 
 #[pyclass(module = "ferrifuzz.rule")]
 #[derive(Clone, Debug, PartialEq)]
@@ -35,7 +35,9 @@ impl Rule {
 
         let parts: Vec<&str> = s[3..].split(" THEN ").collect();
         if parts.len() != 2 {
-            return Err(pyo3::exceptions::PyValueError::new_err("Malformed rule string"));
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "Malformed rule string",
+            ));
         }
 
         let cond_str = parts[0];
@@ -46,24 +48,32 @@ impl Rule {
 
         for cond in cond_str.split(" AND ") {
             let tokens: Vec<&str> = cond.split(" IS ").collect();
-                if tokens.len() != 2 {
-                    return Err(pyo3::exceptions::PyValueError::new_err(
-                    format!("Malformed condition: {}", cond)
-                ));
+            if tokens.len() != 2 {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Malformed condition: {}",
+                    cond
+                )));
             }
             conditions.push((tokens[0].trim().to_string(), tokens[1].trim().to_string()));
         }
 
         let conc_tokens: Vec<&str> = conc_str.split(" IS ").collect();
-        
-        if conc_tokens.len() != 2 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                format!("Malformed conclusion: {}", conc_str)
-            ));
-        }
-        let conclusion = (conc_tokens[0].trim().to_string(), conc_tokens[1].trim().to_string());
 
-        Ok(Self { conditions, conclusion })
+        if conc_tokens.len() != 2 {
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "Malformed conclusion: {}",
+                conc_str
+            )));
+        }
+        let conclusion = (
+            conc_tokens[0].trim().to_string(),
+            conc_tokens[1].trim().to_string(),
+        );
+
+        Ok(Self {
+            conditions,
+            conclusion,
+        })
     }
 
     // let's users to print the rule! (print(rule))
@@ -92,7 +102,7 @@ impl Rule {
             CompareOp::Eq => Ok(self == other),
             CompareOp::Ne => Ok(self != other),
             _ => Err(pyo3::exceptions::PyNotImplementedError::new_err(
-                "Only == and != comparisons are supported for Rules"
+                "Only == and != comparisons are supported for Rules",
             )),
         }
     }
