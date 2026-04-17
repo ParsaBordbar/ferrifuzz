@@ -12,6 +12,7 @@ from ._core import (
     IT2MF,
     mf,
     Variable,
+    Operator,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "IT2MF",
     "mf",
     "Variable",
+    "Operator",
 ]
