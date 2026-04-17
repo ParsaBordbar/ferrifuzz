@@ -128,7 +128,7 @@ pub struct SingletonMF {
     pub x: f64,
 }
 
-[pymethods]
+#[pymethods]
 impl SingletonMF {
     #[new]
     pub fn new(x: f64) -> Self {
@@ -177,12 +177,12 @@ impl Type1MF {
     }
 
     fn __repr__(&self) -> String {
-        format!("<MembershipFunction: {}>, self.shape()")
+        format!("<MembershipFunction: {}>", self.shape())
     }
 }
 
 #[pyfunction]
-pub fn tringle(a: f64, b:f64, c:f64) -> PyResult<Type1MF> {
+pub fn triangle(a: f64, b:f64, c:f64) -> PyResult<Type1MF> {
     Ok(Type1MF::Triangular(TriangularMF::new(a, b, c)?))
 }
 
@@ -192,13 +192,18 @@ pub fn trapezoid(a: f64, b:f64, c:f64, d:f64) -> PyResult<Type1MF> {
 }
 
 #[pyfunction]
-pub fn guassian(center: f64, sigma: f64) -> PyResult<Type1> {
+pub fn gaussian(center: f64, sigma: f64) -> PyResult<Type1MF> {
     Ok(Type1MF::Gaussian(GaussianMF::new(center, sigma)?))
 }
 
 #[pyfunction]
 pub fn singleton(x: f64) -> Type1MF {
     Type1MF::Singleton(SingletonMF::new(x))
+}
+
+#[pyfunction]
+pub fn it2(upper: Type1MF, lower: Type1MF) -> IT2MF {
+    IT2MF::new(upper, lower)
 }
 
 // INTERVAL TYPE-2 MF
