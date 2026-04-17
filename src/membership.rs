@@ -31,7 +31,7 @@ impl TriangularMF {
     }
 
     pub fn membership(&self, x: f64) -> f64 {
-        if x <= self.a || x >= self.c {
+        if x <= self.a || x > self.c {
             0.0
         } else if x == self.b {
             1.0
@@ -48,7 +48,6 @@ impl MF for TriangularMF {
         self.membership(x)
     }
 }
-
 
 #[pyclass]
 #[derive(Clone)]
@@ -89,7 +88,6 @@ impl MF for TrapezoidalMF {
         self.membership(x)
     }
 }
-
 
 #[pyclass]
 #[derive(Clone)]
@@ -182,12 +180,12 @@ impl Type1MF {
 }
 
 #[pyfunction]
-pub fn triangle(a: f64, b:f64, c:f64) -> PyResult<Type1MF> {
+pub fn triangle(a: f64, b: f64, c: f64) -> PyResult<Type1MF> {
     Ok(Type1MF::Triangular(TriangularMF::new(a, b, c)?))
 }
 
 #[pyfunction]
-pub fn trapezoid(a: f64, b:f64, c:f64, d:f64) -> PyResult<Type1MF> {
+pub fn trapezoid(a: f64, b: f64, c: f64, d: f64) -> PyResult<Type1MF> {
     Ok(Type1MF::Trapezoidal(TrapezoidalMF::new(a, b, c, d)?))
 }
 
@@ -222,10 +220,7 @@ impl IT2MF {
     }
 
     pub fn membership(&self, x: f64) -> (f64, f64) {
-        (
-            self.lower.membership(x),
-            self.upper.membership(x),
-        )
+        (self.lower.membership(x), self.upper.membership(x))
     }
 
     pub fn shapes(&self) -> (String, String) {
