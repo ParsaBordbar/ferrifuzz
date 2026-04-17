@@ -1,26 +1,27 @@
-# src/pyfuzzy_rust/__init__.py
 """
-PyFuzzy-Rust: High-performance fuzzy logic library for Python, written in Rust.
+Ferrifuzz: High-performance fuzzy logic library for Python, written in Rust.
 """
 
-from pyfuzzy_rust._core import (
+from ._core import (
+    Rule,
     TriangularMF,
     TrapezoidalMF,
     GaussianMF,
+    SingletonMF,
     Type1MF,
     IT2MF,
+    mf,
     Variable,
-    Rule,
 )
 
 __all__ = [
+    "Rule",
     "TriangularMF",
     "TrapezoidalMF",
     "GaussianMF",
+    "SingletonMF",
     "Type1MF",
     "IT2MF",
+    "mf",
     "Variable",
-    "Rule",
 ]
-
-__version__ = "0.1.0"
