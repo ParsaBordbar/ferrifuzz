@@ -5,6 +5,7 @@ pub mod membership;
 pub mod rule;
 pub mod variable;
 pub mod operator;
+pub mod hedge;
 
 
 #[pymodule]
@@ -18,6 +19,8 @@ fn _core(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<membership::IT2MF>()?;
     m.add_class::<variable::Variable>()?;
     m.add_class::<operator::Operator>()?;
+    m.add_class::<hedge::Hedge>()?;
+
 
     let mf_submodule = PyModule::new_bound(py, "mf")?;
     mf_submodule.add_function(wrap_pyfunction!(membership::triangle, &mf_submodule)?)?;

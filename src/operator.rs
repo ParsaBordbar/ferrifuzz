@@ -22,9 +22,10 @@ impl Operator {
     #[staticmethod]
     #[pyo3(signature = (mu1, mu2, kind="min"))]
     pub fn t_norm(mu1: FuzzyDegree, mu2: FuzzyDegree, kind: &str, py: Python) -> PyResult<PyObject> {
-        let op = match kind {
-            "product" => f_product,
-            _ => f_min,
+        let op = match kind.to_lowercase().as_str() {
+            "product" | "algebraic" => f_product,
+            "min" | "godel" | "zadeh" | "standard" => f_min,
+            _ => f_min, // Default fallback
         };
 
         match (mu1, mu2) {
@@ -38,9 +39,10 @@ impl Operator {
     #[staticmethod]
     #[pyo3(signature = (mu1, mu2, kind="max"))]
     pub fn t_conorm(mu1: FuzzyDegree, mu2: FuzzyDegree, kind: &str, py: Python) -> PyResult<PyObject> {
-        let op = match kind {
-            "prob" => f_prob_or, // Algebraic sum
-            _ => f_max,
+        let op = match kind.to_lowercase().as_str() {
+            "prob" | "algebraic" | "probabilistic" => f_prob_or, // Algebraic sum
+            "max" | "godel" | "zadeh" | "standard" => f_max,
+            _ => f_max, // Default fallback
         };
 
         match (mu1, mu2) {
@@ -54,7 +56,6 @@ impl Operator {
     pub fn complement(mu: FuzzyDegree, py: Python) -> PyObject {
         match mu {
             FuzzyDegree::Type1(v) => (1.0 - v).into_py(py),
-            // IT2 Complement: NOT [lower, upper] = [1 - upper, 1 - lower]
             FuzzyDegree::IT2(t) => (1.0 - t.1, 1.0 - t.0).into_py(py),
         }
     }

@@ -13,6 +13,7 @@ from ._core import (
     mf,
     Variable,
     Operator,
+    Hedge,
 )
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "mf",
     "Variable",
     "Operator",
+    "Hedge",
 ]
