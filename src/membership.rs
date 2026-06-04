@@ -144,7 +144,63 @@ impl MF for SingletonMF {
     }
 }
 
-// TYPE-1 MF ENUM (PYTHON-FRIENDLY)
+
+#[pyclass]
+#[derive(Clone)]
+pub struct BellMF {
+    pub center: f64,
+    pub width: f64,
+    pub slope: f64,
+}
+
+#[pymethods]
+impl BellMF {
+    #[new]
+    pub fn new(center: f64, width: f64, slope: f64) -> PyResult<Self> {
+        if width <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err("width must be > 0"));
+        }
+        if slope <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err("slope must be > 0"));
+        }
+        Ok(Self { center, width, slope })
+    }
+
+    /// Compute the degree of membership for value ``x``.
+    pub fn membership(&self, x: f64) -> f64 {
+        1.0 / (1.0 + ((x - self.center) / self.width).abs().powf(2.0 * self.slope))
+    }
+}
+
+impl MF for BellMF {
+    fn membership(&self, x: f64) -> f64 { self.membership(x) }
+}
+
+
+#[pyclass]
+#[derive(Clone)]
+pub struct SigmoidMF {
+    pub center: f64,
+    pub slope: f64,
+}
+
+#[pymethods]
+impl SigmoidMF {
+    #[new]
+    pub fn new(center: f64, slope: f64) -> Self {
+        Self { center, slope }
+    }
+
+    /// Compute the degree of membership for value ``x``.
+    pub fn membership(&self, x: f64) -> f64 {
+        1.0 / (1.0 + (-self.slope * (x - self.center)).exp())
+    }
+}
+
+impl MF for SigmoidMF {
+    fn membership(&self, x: f64) -> f64 { self.membership(x) }
+}
+
 #[pyclass]
 #[derive(Clone)]
 pub enum Type1MF {
@@ -152,25 +208,33 @@ pub enum Type1MF {
     Trapezoidal(TrapezoidalMF),
     Gaussian(GaussianMF),
     Singleton(SingletonMF),
+    Bell(BellMF),
+    Sigmoid(SigmoidMF),
 }
 
 #[pymethods]
 impl Type1MF {
+    /// Evaluate membership degree at ``x``.
     pub fn membership(&self, x: f64) -> f64 {
         match self {
-            Self::Triangular(mf) => mf.membership(x),
+            Self::Triangular(mf)  => mf.membership(x),
             Self::Trapezoidal(mf) => mf.membership(x),
-            Self::Gaussian(mf) => mf.membership(x),
-            Self::Singleton(mf) => mf.membership(x),
+            Self::Gaussian(mf)    => mf.membership(x),
+            Self::Singleton(mf)   => mf.membership(x),
+            Self::Bell(mf)        => mf.membership(x),
+            Self::Sigmoid(mf)     => mf.membership(x),
         }
     }
 
+    /// Return the shape name of this membership function.
     pub fn shape(&self) -> &'static str {
         match self {
-            Self::Triangular(_) => "Triangular",
+            Self::Triangular(_)  => "Triangular",
             Self::Trapezoidal(_) => "Trapezoidal",
-            Self::Gaussian(_) => "Gaussian",
-            Self::Singleton(_) => "Singleton",
+            Self::Gaussian(_)    => "Gaussian",
+            Self::Singleton(_)   => "Singleton",
+            Self::Bell(_)        => "Bell",
+            Self::Sigmoid(_)     => "Sigmoid",
         }
     }
 
@@ -178,6 +242,7 @@ impl Type1MF {
         format!("<MembershipFunction: {}>", self.shape())
     }
 }
+
 
 #[pyfunction]
 pub fn triangle(a: f64, b: f64, c: f64) -> PyResult<Type1MF> {
@@ -194,9 +259,21 @@ pub fn gaussian(center: f64, sigma: f64) -> PyResult<Type1MF> {
     Ok(Type1MF::Gaussian(GaussianMF::new(center, sigma)?))
 }
 
+
 #[pyfunction]
 pub fn singleton(x: f64) -> Type1MF {
     Type1MF::Singleton(SingletonMF::new(x))
+}
+
+
+#[pyfunction]
+pub fn bell(center: f64, width: f64, slope: f64) -> PyResult<Type1MF> {
+    Ok(Type1MF::Bell(BellMF::new(center, width, slope)?))
+}
+
+#[pyfunction]
+pub fn sigmoid(center: f64, slope: f64) -> Type1MF {
+    Type1MF::Sigmoid(SigmoidMF::new(center, slope))
 }
 
 #[pyfunction]
