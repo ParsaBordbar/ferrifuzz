@@ -77,7 +77,7 @@ impl Rule {
     }
 
     // let's users to print the rule! (print(rule))
-    fn __str__(&self) -> String {
+    pub fn __str__(&self) -> String {
         let conds: Vec<String> = self
             .conditions
             .iter()
