@@ -165,3 +165,4 @@ test_data/
 .env
 .env.local
 local_config.toml
+out.xml
