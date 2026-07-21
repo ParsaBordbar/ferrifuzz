@@ -3,6 +3,7 @@ use pyo3::types::PyDict;
 use std::collections::HashMap;
 use crate::variable::Variable;
 use crate::rule::Rule;
+use crate::it2;
 
 
 /// A 1st-order (TSK) linear consequent: `z = bias + Σ coeffs[var] · input[var]`.
@@ -84,6 +85,35 @@ impl Defuzz {
     }
 }
 
+/// Which inference engine to run. `Auto` picks IT2 when any registered variable
+/// carries interval type-2 terms, else the classic type-1 (Mamdani/Sugeno) path.
+#[derive(Clone, Copy)]
+enum InferKind {
+    Auto,
+    T1,
+    IT2,
+}
+
+impl InferKind {
+    fn parse(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "it2" | "type2" | "type-2" | "interval" => InferKind::IT2,
+            "t1" | "type1" | "type-1" | "mamdani" | "sugeno" => InferKind::T1,
+            _ => InferKind::Auto,
+        }
+    }
+}
+
+#[inline]
+fn t_and(a: f64, b: f64, product: bool) -> f64 {
+    if product { a * b } else { a.min(b) }
+}
+
+#[inline]
+fn t_or(a: f64, b: f64, probor: bool) -> f64 {
+    if probor { a + b - a * b } else { a.max(b) }
+}
+
 
 #[pyclass(module = "ferrifuzz")]
 pub struct FuzzySystem {
@@ -98,13 +128,14 @@ pub struct FuzzySystem {
     and_op: AndOp,
     or_op: OrOp,
     defuzz: Defuzz,
+    infer_kind: InferKind,
 }
 
 #[pymethods]
 impl FuzzySystem {
     #[new]
-    #[pyo3(signature = (and_method = "min", or_method = "max", defuzz_method = "centroid", resolution = 200))]
-    pub fn new(and_method: &str, or_method: &str, defuzz_method: &str, resolution: usize) -> Self {
+    #[pyo3(signature = (and_method = "min", or_method = "max", defuzz_method = "centroid", resolution = 200, r#type = "auto"))]
+    pub fn new(and_method: &str, or_method: &str, defuzz_method: &str, resolution: usize, r#type: &str) -> Self {
         Self {
             inputs: HashMap::new(),
             outputs: HashMap::new(),
@@ -113,6 +144,7 @@ impl FuzzySystem {
             and_op: AndOp::parse(and_method),
             or_op: OrOp::parse(or_method),
             defuzz: Defuzz::parse(defuzz_method),
+            infer_kind: InferKind::parse(r#type),
             and_method: and_method.to_string(),
             or_method: or_method.to_string(),
             defuzz_method: defuzz_method.to_string(),
@@ -329,6 +361,18 @@ impl FuzzySystem {
     /// This holds no Python objects, so it is the reusable engine behind both the
     /// scalar `compute()` and the vectorized batch path — the hot loop stays in Rust.
     fn infer(&self, crisp: &HashMap<String, f64>) -> HashMap<String, f64> {
+        let use_it2 = match self.infer_kind {
+            InferKind::IT2 => true,
+            InferKind::T1 => false,
+            InferKind::Auto => {
+                self.outputs.values().any(|v| v.is_it2())
+                    || self.inputs.values().any(|v| v.is_it2())
+            }
+        };
+        if use_it2 {
+            return self.infer_it2(crisp);
+        }
+
         let mut fuzzy_inputs: HashMap<String, HashMap<String, f64>> =
             HashMap::with_capacity(self.inputs.len());
         for (name, var) in &self.inputs {
@@ -446,16 +490,104 @@ impl FuzzySystem {
         agg
     }
 
+    /// The universe sampling grid for a variable: `(xs, step)` over `resolution`
+    /// evenly spaced points across `[min_value, max_value]`.
+    fn grid(&self, var: &Variable) -> (Vec<f64>, f64) {
+        let step = (var.max_value - var.min_value) / self.resolution as f64;
+        let xs = (0..=self.resolution)
+            .map(|i| var.min_value + i as f64 * step)
+            .collect();
+        (xs, step)
+    }
+
     /// Sample the aggregated output MF once over the resolution grid.
     /// Every Mamdani defuzzifier consumes this shared `(xs, mus)` pair, so the
     /// per-point aggregation runs a single time regardless of method.
     fn sample(&self, var: &Variable, activations: &HashMap<String, f64>) -> Sampled {
-        let step = (var.max_value - var.min_value) / self.resolution as f64;
-        let xs: Vec<f64> = (0..=self.resolution)
-            .map(|i| var.min_value + i as f64 * step)
-            .collect();
+        let (xs, step) = self.grid(var);
         let mus: Vec<f64> = xs.iter().map(|&x| self.aggregate(var, x, activations)).collect();
         Sampled { xs, mus, step }
+    }
+
+    /// Interval type-2 Mamdani inference with Karnik–Mendel type reduction.
+    ///
+    /// Each rule fires a firing *interval* `[f_l, f_r]` — the antecedent t-norm
+    /// runs on lower memberships to get `f_l` and on upper memberships for `f_r`.
+    /// Per output term these intervals max-aggregate into a footprint of
+    /// uncertainty, which KM reduces to a centroid interval; the crisp output is
+    /// that interval's midpoint.
+    fn infer_it2(&self, crisp: &HashMap<String, f64>) -> HashMap<String, f64> {
+        let mut fuzzy: HashMap<String, HashMap<String, (f64, f64)>> =
+            HashMap::with_capacity(self.inputs.len());
+        for (name, var) in &self.inputs {
+            if let Some(&val) = crisp.get(name) {
+                fuzzy.insert(name.clone(), var.evaluate_it2(val));
+            }
+        }
+
+        let use_product = matches!(self.and_op, AndOp::Product);
+        let use_probor = matches!(self.or_op, OrOp::ProbOr);
+
+        let mut agg: HashMap<String, HashMap<String, (f64, f64)>> = HashMap::new();
+        for rule in &self.rules {
+            let (mut rule_l, mut rule_r) = (0.0_f64, 0.0_f64);
+            let mut any_valid = false;
+
+            for group in &rule.antecedent {
+                let (mut group_l, mut group_r) = (1.0_f64, 1.0_f64);
+                let mut valid = true;
+
+                for (var_name, term_name) in group {
+                    match fuzzy.get(var_name) {
+                        Some(terms) => {
+                            let (l, r) = terms.get(term_name).copied().unwrap_or((0.0, 0.0));
+                            group_l = t_and(group_l, l, use_product);
+                            group_r = t_and(group_r, r, use_product);
+                        }
+                        None => { valid = false; break; }
+                    }
+                }
+
+                if !valid { continue; }
+                any_valid = true;
+                rule_l = t_or(rule_l, group_l, use_probor);
+                rule_r = t_or(rule_r, group_r, use_probor);
+            }
+
+            if !any_valid || rule_r <= 0.0 { continue; }
+
+            let (out_var, out_term) = &rule.conclusion;
+            let entry = agg
+                .entry(out_var.clone())
+                .or_default()
+                .entry(out_term.clone())
+                .or_insert((0.0, 0.0));
+            entry.0 = entry.0.max(rule_l);
+            entry.1 = entry.1.max(rule_r);
+        }
+
+        let mut result = HashMap::new();
+        for (var_name, term_firings) in &agg {
+            let Some(var) = self.outputs.get(var_name) else { continue; };
+            let (xs, _) = self.grid(var);
+            let mut lower = vec![0.0_f64; xs.len()];
+            let mut upper = vec![0.0_f64; xs.len()];
+            for (i, &x) in xs.iter().enumerate() {
+                let (mut lo, mut up) = (0.0_f64, 0.0_f64);
+                for (term, &(f_l, f_r)) in term_firings {
+                    if let Some((ml, mu)) = var.it2_term_membership(term, x) {
+                        lo = lo.max(ml.min(f_l));
+                        up = up.max(mu.min(f_r));
+                    }
+                }
+                lower[i] = lo;
+                upper[i] = up;
+            }
+            if let Some((yl, yr)) = it2::km_type_reduce(&xs, &lower, &upper) {
+                result.insert(var_name.clone(), (yl + yr) / 2.0);
+            }
+        }
+        result
     }
 }
 

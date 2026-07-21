@@ -262,12 +262,16 @@ class Variable:
 
     def __init__(self, name: str, min_value: float, max_value: float) -> None: ...
 
-    def __setitem__(self, name: str, mf: Type1MF) -> None:
-        """Add or replace a term: ``var["Hot"] = ff.mf.triangle(...)``."""
+    def __setitem__(self, name: str, mf: Type1MF | IT2MF) -> None:
+        """Add or replace a term.
+
+        ``var["Hot"] = ff.mf.triangle(...)`` for a Type-1 term, or
+        ``var["Hot"] = ff.mf.it2(upper, lower)`` for an interval type-2 term.
+        """
         ...
 
-    def __getitem__(self, name: str) -> Type1MF:
-        """Retrieve a term's MF by name: ``var["Hot"]``."""
+    def __getitem__(self, name: str) -> Type1MF | IT2MF:
+        """Retrieve a term's MF by name: ``var["Hot"]`` (Type1MF or IT2MF)."""
         ...
 
     def __call__(self, value: float) -> dict[str, float]:
@@ -507,6 +511,11 @@ class FuzzySystem:
 
     resolution : int
         Number of sample points for numerical integration (default 200).
+    type : str
+        Inference engine. ``"auto"`` (default) runs the interval type-2 (IT2)
+        Mamdani engine with Karnik–Mendel type reduction whenever a registered
+        variable carries IT2 terms, else the classic type-1 path. ``"it2"``
+        forces IT2; ``"t1"`` forces type-1.
 
     Examples
     --------
@@ -536,6 +545,7 @@ class FuzzySystem:
         or_method: str = "max",
         defuzz_method: str = "centroid",
         resolution: int = 200,
+        type: str = "auto",
     ) -> None: ...
 
     def add_input(self, variable: Variable) -> None:

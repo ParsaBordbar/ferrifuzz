@@ -7,6 +7,7 @@ pub mod variable;
 pub mod operator;
 pub mod hedge;
 pub mod system;
+pub mod it2;
 
 #[pymodule]
 fn _core(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
