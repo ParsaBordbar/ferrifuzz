@@ -7,6 +7,8 @@ Do not import from this file directly — import from ``ferrifuzz``.
 
 from __future__ import annotations
 
+from typing import Any, Sequence
+
 # ─── Membership function classes ─────────────────────────────────────────────
 
 class TriangularMF:
@@ -586,6 +588,40 @@ class FuzzySystem:
         --------
         >>> system.compute({"temperature": 35.0, "humidity": 60.0})
         {'fan_speed': 72.5}
+        """
+        ...
+
+    def compute_batch(
+        self, inputs: dict[str, Sequence[float]]
+    ) -> dict[str, Any]:
+        """Vectorized inference over a batch of input rows in one call.
+
+        Columnar in, columnar out — ``{var: [values]}`` to ``{out_var: [values]}``.
+        Each input column is a 1-D sequence (list or NumPy float64 array); all
+        columns must share the same length ``N``. Result columns are NumPy arrays
+        when NumPy is importable, otherwise plain lists. Rows where an output
+        variable has no firing rule are filled with ``NaN``.
+
+        The whole ``N``-row loop runs in Rust over the shared inference core — one
+        FFI crossing and no per-row Python object churn, unlike calling
+        :meth:`compute` in a Python loop.
+
+        Parameters
+        ----------
+        inputs : dict[str, Sequence[float]]
+            ``{variable_name: column}`` with every column of equal length ``N``.
+
+        Returns
+        -------
+        dict[str, Any]
+            ``{output_name: column}`` — NumPy arrays if NumPy is available,
+            else lists of ``float``.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> out = system.compute_batch({"temperature": np.array([20.0, 55.0, 90.0])})
+        >>> out["fan"]            # np.ndarray of shape (3,)
         """
         ...
 
