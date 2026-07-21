@@ -27,6 +27,64 @@ impl LinearConsequent {
 }
 
 
+/// AND t-norm used to combine antecedent clauses within an OR-group.
+#[derive(Clone, Copy)]
+enum AndOp {
+    Min,
+    Product,
+}
+
+/// OR t-conorm used to combine the OR-groups of a rule's antecedent.
+#[derive(Clone, Copy)]
+enum OrOp {
+    Max,
+    ProbOr,
+}
+
+/// Defuzzification strategy for turning aggregated output MFs into a crisp value.
+/// `Sugeno` short-circuits the Mamdani sampling path with a weighted average.
+#[derive(Clone, Copy)]
+enum Defuzz {
+    Centroid,
+    Bisector,
+    Mom,
+    Som,
+    Lom,
+    Sugeno,
+}
+
+impl AndOp {
+    fn parse(s: &str) -> Self {
+        match s {
+            "product" | "algebraic" => AndOp::Product,
+            _ => AndOp::Min,
+        }
+    }
+}
+
+impl OrOp {
+    fn parse(s: &str) -> Self {
+        match s {
+            "prob" | "probor" | "probabilistic" | "algebraic" => OrOp::ProbOr,
+            _ => OrOp::Max,
+        }
+    }
+}
+
+impl Defuzz {
+    fn parse(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "sugeno" | "weighted_average" | "wtaver" => Defuzz::Sugeno,
+            "bisector" => Defuzz::Bisector,
+            "mom" => Defuzz::Mom,
+            "som" => Defuzz::Som,
+            "lom" => Defuzz::Lom,
+            _ => Defuzz::Centroid,
+        }
+    }
+}
+
+
 #[pyclass(module = "ferrifuzz")]
 pub struct FuzzySystem {
     inputs: HashMap<String, Variable>,
@@ -37,6 +95,9 @@ pub struct FuzzySystem {
     or_method: String,
     defuzz_method: String,
     resolution: usize,
+    and_op: AndOp,
+    or_op: OrOp,
+    defuzz: Defuzz,
 }
 
 #[pymethods]
@@ -49,6 +110,9 @@ impl FuzzySystem {
             outputs: HashMap::new(),
             rules: Vec::new(),
             consequents: HashMap::new(),
+            and_op: AndOp::parse(and_method),
+            or_op: OrOp::parse(or_method),
+            defuzz: Defuzz::parse(defuzz_method),
             and_method: and_method.to_string(),
             or_method: or_method.to_string(),
             defuzz_method: defuzz_method.to_string(),
@@ -273,15 +337,9 @@ impl FuzzySystem {
             }
         }
 
-        let use_product = matches!(self.and_method.as_str(), "product" | "algebraic");
-        let use_probor = matches!(
-            self.or_method.as_str(),
-            "prob" | "probor" | "probabilistic" | "algebraic"
-        );
-        let is_sugeno = matches!(
-            self.defuzz_method.to_lowercase().as_str(),
-            "sugeno" | "weighted_average" | "wtaver"
-        );
+        let use_product = matches!(self.and_op, AndOp::Product);
+        let use_probor = matches!(self.or_op, OrOp::ProbOr);
+        let is_sugeno = matches!(self.defuzz, Defuzz::Sugeno);
 
         let mut activations: HashMap<String, HashMap<String, f64>> = HashMap::new();
         let mut sug_num: HashMap<String, f64> = HashMap::new();
@@ -367,13 +425,13 @@ impl FuzzySystem {
     }
 
     fn defuzzify(&self, var: &Variable, activations: &HashMap<String, f64>) -> f64 {
-        match self.defuzz_method.to_lowercase().as_str() {
-            "centroid" | "cog"                        => self.defuzz_centroid(var, activations),
-            "bisector"                                 => self.defuzz_bisector(var, activations),
-            "mom"                                      => self.defuzz_mom(var, activations),
-            "som"                                      => self.defuzz_som(var, activations),
-            "lom"                                      => self.defuzz_lom(var, activations),
-            _                                          => self.defuzz_centroid(var, activations),
+        let sampled = self.sample(var, activations);
+        match self.defuzz {
+            Defuzz::Bisector => sampled.bisector(var),
+            Defuzz::Mom => sampled.mom(var),
+            Defuzz::Som => sampled.som(var),
+            Defuzz::Lom => sampled.lom(var),
+            Defuzz::Centroid | Defuzz::Sugeno => sampled.centroid(var),
         }
     }
 
@@ -388,61 +446,80 @@ impl FuzzySystem {
         agg
     }
 
-    fn sample_points(&self, var: &Variable) -> Vec<f64> {
+    /// Sample the aggregated output MF once over the resolution grid.
+    /// Every Mamdani defuzzifier consumes this shared `(xs, mus)` pair, so the
+    /// per-point aggregation runs a single time regardless of method.
+    fn sample(&self, var: &Variable, activations: &HashMap<String, f64>) -> Sampled {
         let step = (var.max_value - var.min_value) / self.resolution as f64;
-        (0..=self.resolution).map(|i| var.min_value + i as f64 * step).collect()
+        let xs: Vec<f64> = (0..=self.resolution)
+            .map(|i| var.min_value + i as f64 * step)
+            .collect();
+        let mus: Vec<f64> = xs.iter().map(|&x| self.aggregate(var, x, activations)).collect();
+        Sampled { xs, mus, step }
     }
+}
 
-    fn defuzz_centroid(&self, var: &Variable, activations: &HashMap<String, f64>) -> f64 {
-        let (mut num, mut den) = (0.0_f64, 0.0_f64);
-        for x in self.sample_points(var) {
-            let mu = self.aggregate(var, x, activations);
-            num += x * mu;
-            den += mu;
-        }
-        if den > 0.0 { num / den } else { (var.min_value + var.max_value) / 2.0 }
-    }
 
-    fn defuzz_bisector(&self, var: &Variable, activations: &HashMap<String, f64>) -> f64 {
-        let xs = self.sample_points(var);
-        let step = if xs.len() > 1 { xs[1] - xs[0] } else { 1.0 };
-        let areas: Vec<f64> = xs.iter().map(|&x| self.aggregate(var, x, activations) * step).collect();
-        let half = areas.iter().sum::<f64>() / 2.0;
-        let mut cum = 0.0;
-        for (i, &a) in areas.iter().enumerate() {
-            cum += a;
-            if cum >= half { return xs[i]; }
-        }
+/// The aggregated output MF evaluated on the resolution grid: parallel `xs`/`mus`
+/// vectors plus the grid `step`. Each defuzzifier is a pure reduction over it.
+struct Sampled {
+    xs: Vec<f64>,
+    mus: Vec<f64>,
+    step: f64,
+}
+
+impl Sampled {
+    fn midpoint(var: &Variable) -> f64 {
         (var.min_value + var.max_value) / 2.0
     }
 
-    fn defuzz_mom(&self, var: &Variable, activations: &HashMap<String, f64>) -> f64 {
-        let xs = self.sample_points(var);
-        let mus: Vec<f64> = xs.iter().map(|&x| self.aggregate(var, x, activations)).collect();
-        let peak = mus.iter().cloned().fold(0.0_f64, f64::max);
-        if peak == 0.0 { return (var.min_value + var.max_value) / 2.0; }
-        let (sum, count) = xs.iter().zip(&mus)
-            .filter(|(_, &mu)| (mu - peak).abs() < 1e-9)
-            .fold((0.0_f64, 0usize), |(s, c), (&x, _)| (s + x, c + 1));
-        if count > 0 { sum / count as f64 } else { (var.min_value + var.max_value) / 2.0 }
+    fn peak(&self) -> f64 {
+        self.mus.iter().cloned().fold(0.0_f64, f64::max)
     }
 
-    fn defuzz_som(&self, var: &Variable, activations: &HashMap<String, f64>) -> f64 {
-        let xs = self.sample_points(var);
-        let peak = xs.iter().map(|&x| self.aggregate(var, x, activations)).fold(0.0_f64, f64::max);
+    fn centroid(&self, var: &Variable) -> f64 {
+        let (mut num, mut den) = (0.0_f64, 0.0_f64);
+        for (&x, &mu) in self.xs.iter().zip(&self.mus) {
+            num += x * mu;
+            den += mu;
+        }
+        if den > 0.0 { num / den } else { Self::midpoint(var) }
+    }
+
+    fn bisector(&self, var: &Variable) -> f64 {
+        let half = self.mus.iter().sum::<f64>() * self.step / 2.0;
+        let mut cum = 0.0;
+        for (&x, &mu) in self.xs.iter().zip(&self.mus) {
+            cum += mu * self.step;
+            if cum >= half { return x; }
+        }
+        Self::midpoint(var)
+    }
+
+    fn mom(&self, var: &Variable) -> f64 {
+        let peak = self.peak();
+        if peak == 0.0 { return Self::midpoint(var); }
+        let (sum, count) = self.xs.iter().zip(&self.mus)
+            .filter(|(_, &mu)| (mu - peak).abs() < 1e-9)
+            .fold((0.0_f64, 0usize), |(s, c), (&x, _)| (s + x, c + 1));
+        if count > 0 { sum / count as f64 } else { Self::midpoint(var) }
+    }
+
+    fn som(&self, var: &Variable) -> f64 {
+        let peak = self.peak();
         if peak == 0.0 { return var.min_value; }
-        xs.into_iter()
-            .find(|&x| (self.aggregate(var, x, activations) - peak).abs() < 1e-9)
+        self.xs.iter().zip(&self.mus)
+            .find(|(_, &mu)| (mu - peak).abs() < 1e-9)
+            .map(|(&x, _)| x)
             .unwrap_or(var.min_value)
     }
 
-    fn defuzz_lom(&self, var: &Variable, activations: &HashMap<String, f64>) -> f64 {
-        let xs = self.sample_points(var);
-        let peak = xs.iter().map(|&x| self.aggregate(var, x, activations)).fold(0.0_f64, f64::max);
+    fn lom(&self, var: &Variable) -> f64 {
+        let peak = self.peak();
         if peak == 0.0 { return var.max_value; }
-        xs.into_iter().rev()
-            .find(|&x| (self.aggregate(var, x, activations) - peak).abs() < 1e-9)
+        self.xs.iter().zip(&self.mus).rev()
+            .find(|(_, &mu)| (mu - peak).abs() < 1e-9)
+            .map(|(&x, _)| x)
             .unwrap_or(var.max_value)
     }
-
 }
