@@ -16,7 +16,6 @@ pub struct Variable {
     pub terms: HashMap<String, Type1MF>,
 }
 
-//RUST API
 impl Variable {
     pub fn add_term(&mut self, name: &str, mf: Type1MF) {
         self.terms.insert(name.to_string(), mf);
@@ -30,7 +29,6 @@ impl Variable {
     }
 }
 
-//PYTHON API (PyO3 Bindings)
 #[pymethods]
 impl Variable {
     #[new]

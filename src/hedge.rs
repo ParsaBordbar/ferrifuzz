@@ -22,7 +22,6 @@ impl Hedge {
         }
     }
 
-    //  Standard Hedges (returning pre-configured instances) 
     #[staticmethod]
     pub fn very() -> Self {
         Hedge { power: 2.0 }

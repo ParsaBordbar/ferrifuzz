@@ -7,7 +7,6 @@ pub enum FuzzyDegree {
     IT2((f64, f64)),
 }
 
-// Internal primitive operations
 fn f_max(mu1: f64, mu2: f64) -> f64 { if mu1 >= mu2 { mu1 } else { mu2 } }
 fn f_min(mu1: f64, mu2: f64) -> f64 { if mu1 >= mu2 { mu2 } else { mu1 } }
 fn f_product(mu1: f64, mu2: f64) -> f64 { mu1 * mu2 }
@@ -25,7 +24,7 @@ impl Operator {
         let op = match kind.to_lowercase().as_str() {
             "product" | "algebraic" => f_product,
             "min" | "godel" | "zadeh" | "standard" => f_min,
-            _ => f_min, // Default fallback
+            _ => f_min,
         };
 
         match (mu1, mu2) {
@@ -40,9 +39,9 @@ impl Operator {
     #[pyo3(signature = (mu1, mu2, kind="max"))]
     pub fn t_conorm(mu1: FuzzyDegree, mu2: FuzzyDegree, kind: &str, py: Python) -> PyResult<PyObject> {
         let op = match kind.to_lowercase().as_str() {
-            "prob" | "algebraic" | "probabilistic" => f_prob_or, // Algebraic sum
+            "prob" | "algebraic" | "probabilistic" => f_prob_or,
             "max" | "godel" | "zadeh" | "standard" => f_max,
-            _ => f_max, // Default fallback
+            _ => f_max,
         };
 
         match (mu1, mu2) {

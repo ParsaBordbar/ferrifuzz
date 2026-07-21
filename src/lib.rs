@@ -10,14 +10,12 @@ pub mod system;
 
 #[pymodule]
 fn _core(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Core classes
     m.add_class::<rule::Rule>()?;
     m.add_class::<variable::Variable>()?;
     m.add_class::<operator::Operator>()?;
     m.add_class::<hedge::Hedge>()?;
     m.add_class::<system::FuzzySystem>()?;
 
-    // Membership function classes
     m.add_class::<membership::TriangularMF>()?;
     m.add_class::<membership::TrapezoidalMF>()?;
     m.add_class::<membership::GaussianMF>()?;
@@ -27,7 +25,6 @@ fn _core(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<membership::Type1MF>()?;
     m.add_class::<membership::IT2MF>()?;
 
-    // ff.mf submodule
     let mf_submodule = PyModule::new_bound(py, "mf")?;
     mf_submodule.add_function(wrap_pyfunction!(membership::triangle,  &mf_submodule)?)?;
     mf_submodule.add_function(wrap_pyfunction!(membership::trapezoid, &mf_submodule)?)?;

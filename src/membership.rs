@@ -226,6 +226,22 @@ impl Type1MF {
         }
     }
 
+    /// Representative point of the MF — its analytic center.
+    ///
+    /// Exact and O(1) (no sampling): triangle → peak `b`, trapezoid → plateau
+    /// midpoint, gaussian/bell/sigmoid → `center`, singleton → its value.
+    /// This is the value used as `z` in Sugeno (weighted-average) inference.
+    pub fn center(&self) -> f64 {
+        match self {
+            Self::Triangular(mf)  => mf.b,
+            Self::Trapezoidal(mf) => (mf.b + mf.c) / 2.0,
+            Self::Gaussian(mf)    => mf.center,
+            Self::Singleton(mf)   => mf.x,
+            Self::Bell(mf)        => mf.center,
+            Self::Sigmoid(mf)     => mf.center,
+        }
+    }
+
     /// Return the shape name of this membership function.
     pub fn shape(&self) -> &'static str {
         match self {
@@ -281,7 +297,6 @@ pub fn it2(upper: Type1MF, lower: Type1MF) -> IT2MF {
     IT2MF::new(upper, lower)
 }
 
-// INTERVAL TYPE-2 MF
 #[pyclass]
 #[derive(Clone)]
 pub struct IT2MF {
@@ -308,7 +323,6 @@ impl IT2MF {
     }
 }
 
-// UNIFIED MEMBERSHIP VALUE
 #[derive(Clone, Copy, Debug)]
 pub enum MembershipValue {
     Type1(f64),
@@ -324,7 +338,6 @@ impl MembershipValue {
     }
 }
 
-// FINAL MF WRAPPER (TYPE-1 OR IT2)
 #[derive(Clone)]
 pub enum MFWrapper {
     Type1(Type1MF),

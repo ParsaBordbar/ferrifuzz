@@ -114,6 +114,13 @@ class Type1MF:
     def membership(self, x: float) -> float:
         """Return the membership degree at ``x``."""
         ...
+    def center(self) -> float:
+        """Analytic center (representative point) of the MF — O(1), exact.
+
+        Triangle → peak, trapezoid → plateau midpoint, gaussian/bell/sigmoid →
+        ``center``, singleton → its value. Used as ``z`` in Sugeno inference.
+        """
+        ...
     def shape(self) -> str:
         """Return the shape name: ``"Triangular"``, ``"Gaussian"``, etc."""
         ...
@@ -293,32 +300,47 @@ class Variable:
 # ─── Rule ────────────────────────────────────────────────────────────────────
 
 class Rule:
-    """A fuzzy IF-THEN rule with AND-connected conditions.
+    """A fuzzy IF-THEN rule. The antecedent supports AND and OR.
+
+    The antecedent is stored in disjunctive normal form (DNF): an OR of
+    AND-groups, e.g. ``(a AND b) OR c`` → ``[[a, b], [c]]``. AND binds tighter
+    than OR.
 
     Attributes
     ----------
+    antecedent : list[list[tuple[str, str]]]
+        DNF antecedent — outer list is OR, inner lists are AND-groups.
     conditions : list[tuple[str, str]]
-        ``[(variable_name, term_name), ...]`` — AND-connected antecedents.
+        Backward-compatible flat AND list. Only valid for single-group
+        (AND-only) rules; raises ``ValueError`` if the rule uses OR.
     conclusion : tuple[str, str]
         ``(output_variable_name, term_name)`` — consequent.
 
     Examples
     --------
     >>> r = ff.Rule.from_string(
-    ...     "IF temp IS hot AND humidity IS high THEN fan IS fast"
+    ...     "IF temp IS hot AND humidity IS high OR temp IS extreme THEN fan IS fast"
     ... )
-    >>> print(r)
-    IF temp IS hot AND humidity IS high THEN fan IS fast
+    >>> r.antecedent
+    [[('temp', 'hot'), ('humidity', 'high')], [('temp', 'extreme')]]
     """
 
+    antecedent: list[list[tuple[str, str]]]
     conditions: list[tuple[str, str]]
     conclusion: tuple[str, str]
 
     def __init__(
         self,
-        conditions: list[tuple[str, str]],
-        conclusion: tuple[str, str],
-    ) -> None: ...
+        conditions: list[tuple[str, str]] | None = None,
+        conclusion: tuple[str, str] | None = None,
+        antecedent: list[list[tuple[str, str]]] | None = None,
+    ) -> None:
+        """Construct a rule.
+
+        Pass exactly one of ``conditions`` (a flat AND list) or ``antecedent``
+        (an explicit DNF for OR rules). ``conclusion`` is required.
+        """
+        ...
 
     @classmethod
     def from_string(cls, rule_str: str) -> "Rule":
@@ -326,7 +348,9 @@ class Rule:
 
         Format
         ------
-        ``IF <var> IS <term> [AND <var> IS <term> ...] THEN <var> IS <term>``
+        ``IF <var> IS <term> [(AND|OR) <var> IS <term> ...] THEN <var> IS <term>``
+
+        ``AND`` binds tighter than ``OR``.
 
         Parameters
         ----------
@@ -334,8 +358,12 @@ class Rule:
 
         Examples
         --------
-        >>> rule = ff.Rule.from_string("IF temp IS hot THEN fan IS fast")
+        >>> rule = ff.Rule.from_string("IF temp IS hot OR temp IS extreme THEN fan IS fast")
         """
+        ...
+
+    def group_count(self) -> int:
+        """Number of OR-groups in the antecedent (1 for a plain AND rule)."""
         ...
 
     def __str__(self) -> str: ...
@@ -459,8 +487,11 @@ class FuzzySystem:
     Parameters
     ----------
     and_method : str
-        T-norm for combining rule conditions.
+        T-norm combining conditions inside an AND-group.
         ``"min"`` (Mamdani, default) or ``"product"`` (Larsen).
+    or_method : str
+        T-conorm combining OR-groups of a rule antecedent.
+        ``"max"`` (default) or ``"probor"`` (probabilistic OR).
     defuzz_method : str
         Defuzzification strategy for output variables. Options:
 
@@ -469,7 +500,8 @@ class FuzzySystem:
         * ``"mom"``             — Mean of Maxima
         * ``"som"``             — Smallest of Maxima
         * ``"lom"``             — Largest of Maxima
-        * ``"weighted_average"``— Weighted Average (Sugeno-style)
+        * ``"weighted_average"``— Weighted Average / 0th-order Sugeno
+          (alias ``"sugeno"``); uses each term's analytic center, no sampling.
 
     resolution : int
         Number of sample points for numerical integration (default 200).
@@ -499,6 +531,7 @@ class FuzzySystem:
     def __init__(
         self,
         and_method: str = "min",
+        or_method: str = "max",
         defuzz_method: str = "centroid",
         resolution: int = 200,
     ) -> None: ...
@@ -509,6 +542,23 @@ class FuzzySystem:
 
     def add_output(self, variable: Variable) -> None:
         """Register a ``Variable`` as a system output."""
+        ...
+
+    def add_consequent(
+        self,
+        out_var: str,
+        term: str,
+        coeffs: dict[str, float],
+        bias: float = 0.0,
+    ) -> None:
+        """Register a 1st-order (TSK) linear consequent for a Sugeno output term.
+
+        The fired rule concluding ``... THEN out_var IS term`` emits
+        ``z = bias + Σ coeffs[input_var] · input_value`` instead of an MF center.
+        Use with ``defuzz_method="sugeno"``. Empty ``coeffs`` → a constant
+        (0th-order) consequent. Sugeno outputs are weighted per rule:
+        ``y = Σ(wᵢ·zᵢ) / Σ(wᵢ)``.
+        """
         ...
 
     def add_rule(self, rule: Rule) -> None:
