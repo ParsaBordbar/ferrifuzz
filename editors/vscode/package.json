@@ -1,0 +1,54 @@
+{
+  "name": "ferrifuzz-vscode",
+  "displayName": "Ferrifuzz",
+  "description": "Syntax highlighting for ferrifuzz fuzzy-rule strings in Python, plus snippets for the ferrifuzz Python API.",
+  "version": "0.2.0",
+  "publisher": "ParsaBordbar",
+  "license": "SEE LICENSE IN README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ParsaBordbar/ferrifuzz"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "fuzzy",
+    "fuzzy logic",
+    "ferrifuzz",
+    "mamdani",
+    "sugeno"
+  ],
+  "contributes": {
+    "grammars": [
+      {
+        "scopeName": "ferrifuzz.rule.injection",
+        "path": "./syntaxes/ferrifuzz-rule.injection.json",
+        "injectTo": [
+          "source.python"
+        ]
+      }
+    ],
+    "snippets": [
+      {
+        "language": "python",
+        "path": "./snippets/python.code-snippets"
+      }
+    ]
+  },
+  "scripts": {
+    "build:snippets": "python3 tools/build_snippets.py",
+    "test:snippets": "MPLBACKEND=Agg python3 tools/test_snippets.py",
+    "test:grammar": "node tools/test_grammar.mjs",
+    "package": "vsce package --skip-license"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.0.0",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.0.0"
+  }
+}

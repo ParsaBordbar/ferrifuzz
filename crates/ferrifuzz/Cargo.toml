@@ -1,0 +1,20 @@
+[package]
+name = "ferrifuzz"
+description = "Fuzzy logic in pure Rust: type-1 and interval type-2 Mamdani/Sugeno inference, linguistic hedges, and fuzzy time series."
+readme = "../../README.md"
+keywords = ["fuzzy", "fuzzy-logic", "mamdani", "sugeno", "type-2"]
+categories = ["science", "mathematics", "algorithms"]
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[features]
+# Run `FuzzySystem::compute_batch` rows on all cores (adds the `rayon` dependency).
+parallel = ["dep:rayon"]
+
+[dependencies]
+rayon = { version = "1.10", optional = true }

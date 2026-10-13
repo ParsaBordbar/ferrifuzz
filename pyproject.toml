@@ -1,26 +1,61 @@
 [project]
 name = "ferrifuzz"
-version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+dynamic = ["version"]
+description = "High-performance fuzzy logic for Python, powered by a Rust core: Mamdani, Sugeno, interval type-2, and fuzzy time series."
+readme = "python/README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 authors = [
-    { name = "ParsaBordbar", email = "parsab71@gmail.com" }
+    { name = "Parsa Bordbar", email = "parsab71@gmail.com" }
 ]
-requires-python = ">=3.13"
-dependencies = [
-    "matplotlib>=3.10.8",
+requires-python = ">=3.9"
+keywords = ["fuzzy", "fuzzy-logic", "mamdani", "sugeno", "type-2", "time-series"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Typing :: Typed",
 ]
+# No hard runtime dependencies. numpy is optional (compute_batch / vectorised
+# membership return numpy arrays when it is installed, lists otherwise);
+# matplotlib is only needed for ferrifuzz.plot.
+dependencies = []
 
-[project.scripts]
-ferrifuzz = "ferrifuzz:main"
+[project.optional-dependencies]
+numpy = ["numpy>=1.21"]
+plot = ["numpy>=1.21", "matplotlib>=3.5"]
+all = ["numpy>=1.21", "matplotlib>=3.5"]
+
+[project.urls]
+Repository = "https://github.com/ParsaBordbar/ferrifuzz"
+Issues = "https://github.com/ParsaBordbar/ferrifuzz/issues"
+
+[dependency-groups]
+dev = ["maturin>=1.0,<2.0", "pytest>=7"]
 
 [tool.maturin]
+manifest-path = "crates/ferrifuzz-python/Cargo.toml"
 module-name = "ferrifuzz._core"
-python-packages = ["ferrifuzz"]
-python-source = "src"
+python-source = "python"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/python"]
 
 [tool.uv]
-cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.rs" }, { file = "Cargo.toml" }, { file = "Cargo.lock" }]
+cache-keys = [{ file = "pyproject.toml" }, { file = "Cargo.toml" }, { file = "crates/**/Cargo.toml" }, { file = "crates/**/*.rs" }]
 
 [build-system]
 requires = ["maturin>=1.0,<2.0"]

@@ -1,0 +1,24 @@
+[package]
+name = "ferrifuzz-python"
+description = "Python bindings for ferrifuzz (built with maturin as ferrifuzz._core)."
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+ferrifuzz = { path = "../ferrifuzz", features = ["parallel"] }
+# "extension-module" skips linking libpython; "abi3-py39" builds one wheel for every CPython >= 3.9;
+# "generate-import-lib" lets Windows wheels be cross-compiled without a Windows Python.
+pyo3 = { version = "0.22.4", features = ["extension-module", "abi3-py39", "generate-import-lib"] }
+
+[lints.rust]
+# pyo3 0.22's create_exception! checks a `gil-refs` feature this crate does not define.
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("gil-refs"))'] }
