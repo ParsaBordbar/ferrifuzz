@@ -1,14 +1,13 @@
-[package]
-name = "ferrifuzz"
-version = "0.1.0"
+[workspace]
+resolver = "2"
+members = ["crates/ferrifuzz", "crates/ferrifuzz-python"]
+default-members = ["crates/ferrifuzz"]
+
+[workspace.package]
+version = "0.2.0"
 edition = "2021"
-
-[lib]
-name = "_core"
-# "cdylib" is necessary to produce a shared library for Python to import from.
-crate-type = ["cdylib", "rlib"]
-
-[dependencies]
-# "extension-module" tells pyo3 we want to build an extension module (skips linking against libpython.so)
-# "abi3-py39" tells pyo3 (and maturin) to build using the stable ABI with minimum Python version 3.9
-pyo3 = { version = "0.22.4", features = ["extension-module", "abi3-py39"] }
+rust-version = "1.70"
+authors = ["Parsa Bordbar <parsab71@gmail.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/ParsaBordbar/ferrifuzz"
+homepage = "https://github.com/ParsaBordbar/ferrifuzz"

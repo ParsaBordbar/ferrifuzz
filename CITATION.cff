@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use ferrifuzz in your research, coursework or thesis, please cite it as below."
+title: "ferrifuzz: fast fuzzy logic for Python and Rust"
+type: software
+authors:
+  - family-names: Bordbar
+    given-names: Parsa
+    email: parsab71@gmail.com
+version: 0.2.0
+date-released: 2026-10-04
+license: Apache-2.0
+repository-code: "https://github.com/ParsaBordbar/ferrifuzz"
+keywords:
+  - fuzzy logic
+  - fuzzy inference
+  - interval type-2 fuzzy sets
+  - fuzzy time series
+  - rust
+  - python

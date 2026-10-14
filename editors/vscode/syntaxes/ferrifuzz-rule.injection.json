@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "scopeName": "ferrifuzz.rule.injection",
+  "comment": "Highlights ferrifuzz rule strings inside Python string literals. A region starts only where a string (or a line of a triple-quoted string) begins with `IF [(] <var> IS` and contains THEN later, so ordinary strings are untouched. Keywords are case-insensitive.",
+  "injectionSelector": "L:string.quoted.single.python, L:string.quoted.raw.single.python, L:string.quoted.multi.python, L:string.quoted.raw.multi.python",
+  "patterns": [
+    {
+      "include": "#rule"
+    }
+  ],
+  "repository": {
+    "rule": {
+      "name": "meta.rule.ferrifuzz",
+      "comment": "`begin` must consume the leading IF: a zero-width begin re-matches at the same position through the L: injection and trips the tokenizer's endless-loop guard.",
+      "begin": "(?:(?<=[\"'])|^)\\s*((?i:IF))(?=\\s+\\(*\\s*[^\\s\"'()]+\\s+(?i:IS)\\s[^\"']*\\b(?i:THEN)\\b)",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.control.conditional.ferrifuzz"
+        }
+      },
+      "end": "(?=[\"'])|$",
+      "patterns": [
+        {
+          "include": "#clause"
+        },
+        {
+          "include": "#weight"
+        },
+        {
+          "include": "#keywords"
+        },
+        {
+          "include": "#parens"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.conditional.ferrifuzz",
+          "match": "\\b(?i:IF|THEN)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.ferrifuzz",
+          "match": "\\b(?i:AND|OR)\\b"
+        }
+      ]
+    },
+    "clause": {
+      "comment": "var IS [NOT] [hedge] term — a hedge word directly before a keyword, paren or the closing quote is the term itself.",
+      "match": "([^\\s\"'()]+)\\s+((?i:IS))\\s+(?:((?i:NOT))\\s+)?(?:((?i:very|extremely|somewhat|more_or_less|moreorless|slightly|plus|minus))\\s+(?=[^\\s\"'()]))?((?:(?!\\b(?i:AND|OR|THEN|WITH)\\b)[^\\s\"'()])+)",
+      "captures": {
+        "1": {
+          "name": "variable.other.input.ferrifuzz"
+        },
+        "2": {
+          "name": "keyword.operator.word.ferrifuzz"
+        },
+        "3": {
+          "name": "keyword.operator.logical.negation.ferrifuzz"
+        },
+        "4": {
+          "name": "storage.modifier.hedge.ferrifuzz"
+        },
+        "5": {
+          "name": "entity.name.type.term.ferrifuzz"
+        }
+      }
+    },
+    "weight": {
+      "match": "\\b((?i:WITH))\\s+([0-9]*\\.?[0-9]+)",
+      "captures": {
+        "1": {
+          "name": "keyword.operator.word.ferrifuzz"
+        },
+        "2": {
+          "name": "constant.numeric.ferrifuzz"
+        }
+      }
+    },
+    "parens": {
+      "name": "punctuation.section.parens.ferrifuzz",
+      "match": "[()]"
+    }
+  }
+}
