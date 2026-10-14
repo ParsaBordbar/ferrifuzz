@@ -4,20 +4,48 @@ ferrifuzz is a fuzzy logic library for Python with a Rust core: Mamdani, Sugeno 
 interval type-2 inference, linguistic hedges, six t-norms / t-conorms, fuzzy time series, and
 plotting helpers. Thank you for testing it. Your feedback decides what changes next.
 
-## 1. Install (1 minute)
+## 1. Install (2 minutes)
 
-Python 3.9 or newer on Windows, macOS or Linux; no Rust or compiler needed.
+You need **Python 3.9 or newer** (`python3 --version`) on Windows x64, macOS or Linux.
+No Rust or compiler needed. The 0.2.0 pre-release is on **TestPyPI**, a sandbox copy of
+PyPI, so plain `pip install ferrifuzz` does not find it yet.
 
-```sh
-python3 -m venv ff && source ff/bin/activate          # Windows: ff\Scripts\activate
-pip install "ferrifuzz[plot]"
-```
-
-If you were sent the **pre-release on TestPyPI** instead:
+macOS / Linux:
 
 ```sh
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "ferrifuzz[plot]==0.2.0"
+python3 -m venv ff
+source ff/bin/activate
+python -m pip install --upgrade pip
+pip install numpy matplotlib                                      # from the normal PyPI
+pip install -i https://test.pypi.org/simple/ "ferrifuzz==0.2.0"   # from TestPyPI
 ```
+
+Windows (PowerShell):
+
+```powershell
+py -m venv ff
+ff\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install numpy matplotlib
+pip install -i https://test.pypi.org/simple/ "ferrifuzz==0.2.0"
+```
+
+With [uv](https://docs.astral.sh/uv/) instead: `uv venv ff`, activate it as above, then the
+same two installs as `uv pip install ...`.
+
+Check it worked:
+
+```sh
+python -c "import ferrifuzz as ff; print(ff.__version__)"        # 0.2.0
+```
+
+If it fails:
+- `ferrifuzz==0.1.0 depends on Python>=3.13` or `No matching distribution`: keep the
+  `==0.2.0`, upgrade pip (line 3 above); with uv add `--refresh`.
+- `No module named ferrifuzz`: the `ff` environment is not active in this terminal or editor.
+- PowerShell refuses `Activate.ps1`: run
+  `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use `ff\Scripts\activate.bat` in cmd.
+- Please tell me your OS, `python --version` and the full error.
 
 Optional, for VS Code: install the `.vsix` you received (*Extensions → … → Install from
 VSIX*). It adds colour to rule strings and snippets (type `ffmamdani` + Tab).
