@@ -1,8 +1,8 @@
 {
   "name": "ferrifuzz-vscode",
   "displayName": "Ferrifuzz",
-  "description": "Syntax highlighting for ferrifuzz fuzzy-rule strings in Python, plus snippets for the ferrifuzz Python API.",
-  "version": "0.2.0",
+  "description": "Syntax highlighting, completion and checks for ferrifuzz fuzzy-rule strings in Python, snippets for the ferrifuzz Python API, and a check that the selected interpreter can provide ferrifuzz completions.",
+  "version": "0.2.1",
   "publisher": "ParsaBordbar",
   "license": "SEE LICENSE IN README.md",
   "repository": {
@@ -23,6 +23,10 @@
     "mamdani",
     "sugeno"
   ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:python"
+  ],
   "contributes": {
     "grammars": [
       {
@@ -38,13 +42,49 @@
         "language": "python",
         "path": "./snippets/python.code-snippets"
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "ferrifuzz.checkInterpreter",
+        "title": "Check Interpreter for Completions",
+        "category": "Ferrifuzz"
+      },
+      {
+        "command": "ferrifuzz.resetInterpreterWarnings",
+        "title": "Reset Interpreter Warnings",
+        "category": "Ferrifuzz"
+      }
+    ],
+    "configuration": {
+      "title": "Ferrifuzz",
+      "properties": {
+        "ferrifuzz.interpreterCheck.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Warn when a Python file imports ferrifuzz but the selected interpreter does not have ferrifuzz 0.2.0 or newer (needed for completions and hover docs)."
+        },
+        "ferrifuzz.ruleCompletion.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Suggest variables, terms, hedges and keywords inside rule strings (\"IF temp IS ...\"), read from the Variables defined in the same file."
+        },
+        "ferrifuzz.ruleDiagnostics.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Warn about unknown terms, misspelled variables and inputs / outputs on the wrong side of THEN in rule strings added to a system in the same file."
+        }
+      }
+    }
   },
   "scripts": {
     "build:snippets": "python3 tools/build_snippets.py",
     "test:snippets": "MPLBACKEND=Agg python3 tools/test_snippets.py",
     "test:grammar": "node tools/test_grammar.mjs",
-    "package": "vsce package --skip-license"
+    "package": "vsce package --skip-license",
+    "test:check": "node tools/test_check.js",
+    "test:rules": "node tools/test_rules.js",
+    "test": "npm run test:check && npm run test:rules && npm run test:extension",
+    "test:extension": "node tools/test_extension.js"
   },
   "devDependencies": {
     "@vscode/vsce": "^3.0.0",

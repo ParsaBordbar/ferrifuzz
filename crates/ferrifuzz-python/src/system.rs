@@ -117,6 +117,9 @@ impl PyFuzzySystem {
     /// Run inference — `{input: value}` in, `{output: value}` out (every output; NaN
     /// where no rule fired). Raises `ff.InputError` for missing / unknown / NaN inputs
     /// and `ff.ModelError` when a rule names an unknown variable or term.
+    ///
+    /// >>> system.compute({"temp": 30})
+    /// {'fan': 56.078...}
     fn compute<'py>(
         &self,
         py: Python<'py>,
@@ -149,6 +152,9 @@ impl PyFuzzySystem {
 
     /// Vectorized inference — `{input: column}` in (lists or NumPy arrays of equal length),
     /// `{output: column}` out as NumPy arrays (lists without NumPy). Runs on all cores.
+    ///
+    /// >>> system.compute_batch({"temp": [10, 20, 30]})
+    /// {'fan': array([43.92..., 50.0, 56.07...])}
     fn compute_batch<'py>(
         &self,
         py: Python<'py>,
@@ -169,11 +175,18 @@ impl PyFuzzySystem {
 
     /// Positional inference: input values in `input_names()` order → list of outputs in
     /// `output_names()` order. Fastest call for simulation loops.
+    ///
+    /// >>> for _ in range(steps):
+    /// ...     (fan,) = system.evaluate([temp])
+    /// ...     temp -= 0.01 * fan
     fn evaluate(&self, values: Vec<f64>) -> PyResult<Vec<f64>> {
         self.0.evaluate(&values).map_err(to_py_err)
     }
 
     /// Firing strength of every rule (in rule order) — e.g. for ANFIS-style least squares.
+    ///
+    /// >>> system.rule_strengths({"temp": 30})    # cold, warm, hot
+    /// [0.0, 0.5, 0.5]
     fn rule_strengths(&self, inputs: &Bound<'_, PyAny>) -> PyResult<Vec<f64>> {
         self.0
             .rule_strengths(crisp_inputs(inputs)?)
@@ -222,6 +235,9 @@ impl PyFuzzySystem {
 
     /// Every problem found — `"error: ..."` lines first, then `"warning: ..."` lines
     /// (unused inputs, duplicate / conflicting rules, ...). Empty when the model is clean.
+    ///
+    /// >>> system.validate()
+    /// ["warning: input variable 'hum' is never used by any rule"]
     fn validate(&self) -> Vec<String> {
         self.0.validate()
     }
@@ -236,10 +252,12 @@ impl PyFuzzySystem {
         self.0.output(name).cloned().map(PyVariable)
     }
 
+    /// Names of the registered inputs, in the order they were added.
     fn input_names(&self) -> Vec<String> {
         self.0.input_names().into_iter().map(String::from).collect()
     }
 
+    /// Names of the registered outputs, in the order they were added.
     fn output_names(&self) -> Vec<String> {
         self.0
             .output_names()
@@ -248,6 +266,7 @@ impl PyFuzzySystem {
             .collect()
     }
 
+    /// Number of rules in the rule base.
     fn rule_count(&self) -> usize {
         self.0.rules().len()
     }
@@ -263,21 +282,25 @@ impl PyFuzzySystem {
         self.0.rules().iter().cloned().map(PyRule).collect()
     }
 
+    /// T-norm combining clauses joined by AND (canonical name, e.g. "min").
     #[getter]
     fn and_method(&self) -> &'static str {
         self.0.and_method().name()
     }
 
+    /// T-conorm combining OR-groups (canonical name, e.g. "max").
     #[getter]
     fn or_method(&self) -> &'static str {
         self.0.or_method().name()
     }
 
+    /// Defuzzification method (canonical name, e.g. "centroid").
     #[getter]
     fn defuzz_method(&self) -> &'static str {
         self.0.defuzz().name()
     }
 
+    /// "mamdani" (clip consequents) or "larsen" (scale them).
     #[getter]
     fn implication(&self) -> &'static str {
         self.0.implication().name()
@@ -289,16 +312,19 @@ impl PyFuzzySystem {
         self.0.inference().name()
     }
 
+    /// IT2 type reduction: "km", "cos" or "height".
     #[getter]
     fn type_reduction(&self) -> &'static str {
         self.0.type_reduction().name()
     }
 
+    /// Sampling steps over each output range.
     #[getter]
     fn resolution(&self) -> usize {
         self.0.resolution()
     }
 
+    /// True when inputs are clipped into each variable's range first.
     #[getter]
     fn clamp_inputs(&self) -> bool {
         self.0.input_clamping()

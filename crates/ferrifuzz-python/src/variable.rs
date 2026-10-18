@@ -31,16 +31,19 @@ impl PyVariable {
             .map_err(to_py_err)
     }
 
+    /// Variable name, as used in rule strings and `compute` dicts.
     #[getter]
     fn name(&self) -> &str {
         self.0.name()
     }
 
+    /// Lower bound of the universe.
     #[getter]
     fn min_value(&self) -> f64 {
         self.0.min_value()
     }
 
+    /// Upper bound of the universe.
     #[getter]
     fn max_value(&self) -> f64 {
         self.0.max_value()
@@ -90,6 +93,10 @@ impl PyVariable {
     }
 
     /// Membership of `value` in every term — `{term: μ}`; IT2 terms give `(lower, upper)`.
+    ///
+    /// >>> temp = ff.Variable("temp", 0, 40).automf(["cold", "warm", "hot"])
+    /// >>> temp.fuzzify(30)
+    /// {'cold': 0.0, 'warm': 0.5, 'hot': 0.5}
     fn fuzzify<'py>(&self, py: Python<'py>, value: f64) -> PyResult<Bound<'py, PyDict>> {
         let dict = PyDict::new_bound(py);
         for (name, term) in self.0.terms() {
@@ -106,7 +113,14 @@ impl PyVariable {
     /// `names` is an int (3 → low/medium/high, 5 → very_low..very_high,
     /// 7 → NB NM NS ZE PS PM PB, other n → A1..An) or a list of names.
     /// `shape` is "triangle" or "gaussian". Returns the variable for chaining.
-    #[pyo3(signature = (names=TermNames::Count(3), shape="triangle"))]
+    ///
+    /// >>> ff.Variable("speed", 0, 100).automf(3).get_terms()
+    /// ['low', 'medium', 'high']
+    /// >>> ff.Variable("temp", 0, 40).automf(["cold", "warm", "hot"], shape="gaussian")
+    #[pyo3(
+        signature = (names=TermNames::Count(3), shape="triangle"),
+        text_signature = "($self, names=3, shape=\"triangle\")"
+    )]
     fn automf<'py>(
         mut slf: PyRefMut<'py, Self>,
         names: TermNames,

@@ -103,6 +103,11 @@ fn _core(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<membership::PyIT2MF>()?;
 
     let mf = PyModule::new_bound(py, "mf")?;
+    mf.setattr(
+        "__doc__",
+        "Membership-function constructors: `ff.mf.triangle(0, 5, 10)`, ...\n\n\
+         Invalid parameters raise `ff.FuzzyError` (a `ValueError`).",
+    )?;
     mf.add_function(wrap_pyfunction!(membership::triangle, &mf)?)?;
     mf.add_function(wrap_pyfunction!(membership::trapezoid, &mf)?)?;
     mf.add_function(wrap_pyfunction!(membership::gaussian, &mf)?)?;

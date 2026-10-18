@@ -25,11 +25,13 @@ impl PyClause {
         Ok(Self(clause))
     }
 
+    /// Variable name the clause tests.
     #[getter]
     fn var(&self) -> &str {
         &self.0.var
     }
 
+    /// Term name the clause tests.
     #[getter]
     fn term(&self) -> &str {
         &self.0.term
@@ -156,6 +158,7 @@ impl PyRule {
         Rule::parse(rule_str).map(Self).map_err(to_py_err)
     }
 
+    /// Rule weight in [0, 1]; scales the firing strength.
     #[getter]
     fn weight(&self) -> f64 {
         self.0.weight

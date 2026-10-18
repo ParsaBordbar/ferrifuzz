@@ -10,17 +10,24 @@ from __future__ import annotations
 from typing import Any, Iterator, Literal, Mapping, Sequence, Union, overload
 
 # ─── Option names ────────────────────────────────────────────────────────────
-# The Literal part drives editor completion; ``| str`` keeps names held in plain
-# ``str`` variables type-correct. At runtime an unknown name raises FuzzyError
-# listing the valid options (and suggesting the closest one).
+# The Literal part drives editor completion and lists canonical names only; ``| str``
+# keeps aliases and names held in plain ``str`` variables type-correct. Accepted aliases:
+#   t-norm: godel / zadeh / standard (min), prod / algebraic (product), luk / bounded (lukasiewicz)
+#   t-conorm: godel / zadeh / standard (max), prob / probabilistic / algebraic (probor), luk / bounded
+#   defuzz: cog / coa (centroid), sugeno / wtaver (weighted_average), mean_of_maximum, ...
+#   inference: t1 / type-1 / mamdani / sugeno (type1), type2 / type-2 / interval (it2)
+#   implication: min (mamdani), product / prod (larsen); complement: zadeh (standard)
+#   type reduction: karnik_mendel (km), center_of_sets (cos); shape: triangular, gauss, ...
+# At runtime an unknown name raises FuzzyError listing the valid options (and suggesting
+# the closest one).
 
-TNormName = Union[Literal["min", "product", "lukasiewicz", "drastic", "einstein", "hamacher", "prod", "algebraic", "luk", "bounded", "godel", "zadeh", "standard"], str]
-TConormName = Union[Literal["max", "probor", "lukasiewicz", "drastic", "einstein", "hamacher", "prob", "probabilistic", "algebraic", "luk", "bounded", "godel", "zadeh", "standard"], str]
-DefuzzName = Union[Literal["centroid", "bisector", "mom", "som", "lom", "weighted_average", "sugeno", "cog", "coa", "wtaver"], str]
-InferenceName = Union[Literal["auto", "type1", "it2", "t1", "type-1", "mamdani", "sugeno", "type2", "type-2", "interval"], str]
-ImplicationName = Union[Literal["mamdani", "larsen", "min", "product", "prod"], str]
-TypeReductionName = Union[Literal["km", "cos", "height", "karnik_mendel", "center_of_sets"], str]
-ComplementName = Union[Literal["standard", "sugeno", "yager", "zadeh"], str]
+TNormName = Union[Literal["min", "product", "lukasiewicz", "drastic", "einstein", "hamacher"], str]
+TConormName = Union[Literal["max", "probor", "lukasiewicz", "drastic", "einstein", "hamacher"], str]
+DefuzzName = Union[Literal["centroid", "bisector", "mom", "som", "lom", "weighted_average"], str]
+InferenceName = Union[Literal["auto", "type1", "it2"], str]
+ImplicationName = Union[Literal["mamdani", "larsen"], str]
+TypeReductionName = Union[Literal["km", "cos", "height"], str]
+ComplementName = Union[Literal["standard", "sugeno", "yager"], str]
 ShapeName = Union[Literal["triangle", "gaussian"], str]
 HedgeWord = Literal["very", "extremely", "somewhat", "more_or_less", "slightly", "plus", "minus"]
 
@@ -49,6 +56,7 @@ class RuleSyntaxError(FuzzyError):
 # ─── Membership function classes ─────────────────────────────────────────────
 
 class _Shape:
+    """Common interface of the type-1 membership-function classes."""
     @overload
     def membership(self, x: float) -> float: ...
     @overload
@@ -210,8 +218,11 @@ class Variable:
     """
 
     name: str
+    """Variable name, as used in rule strings and ``compute`` dicts."""
     min_value: float
+    """Lower bound of the universe."""
     max_value: float
+    """Upper bound of the universe."""
 
     def __init__(self, name: str, min_value: float, max_value: float) -> None: ...
     def __setitem__(self, name: str, mf: AnyType1MF | IT2MF) -> None:
@@ -228,7 +239,12 @@ class Variable:
         ...
     def fuzzify(self, value: float) -> dict[str, float | tuple[float, float]]:
         """Membership of ``value`` in every term, in insertion order. Type-1 terms give a
-        float, interval type-2 terms a ``(lower, upper)`` tuple."""
+        float, interval type-2 terms a ``(lower, upper)`` tuple.
+
+        >>> temp = ff.Variable("temp", 0, 40).automf(["cold", "warm", "hot"])
+        >>> temp.fuzzify(30)
+        {'cold': 0.0, 'warm': 0.5, 'hot': 0.5}
+        """
         ...
     def automf(self, names: int | Sequence[str] = 3, shape: ShapeName = "triangle") -> Variable:
         """Replace all terms with evenly spaced, overlapping terms; returns the variable.
@@ -237,6 +253,10 @@ class Variable:
         5 → very_low/low/medium/high/very_high, 7 → NB NM NS ZE PS PM PB, otherwise
         A1..An. The first and last terms peak at ``min_value`` / ``max_value``;
         triangles sum to 1 everywhere inside the range. ``shape``: "triangle" or "gaussian".
+
+        >>> ff.Variable("speed", 0, 100).automf(3).get_terms()
+        ['low', 'medium', 'high']
+        >>> ff.Variable("temp", 0, 40).automf(["cold", "warm", "hot"], shape="gaussian")
         """
         ...
     def get_terms(self) -> list[str]:
@@ -258,7 +278,9 @@ class Clause:
     """
 
     var: str
+    """Variable name the clause tests."""
     term: str
+    """Term name the clause tests."""
     negated: bool
     hedge: str | None
     hedge_power: float | None
@@ -293,6 +315,7 @@ class Rule:
     """The single ``(output, term)``; ``ValueError`` for multi-output rules."""
     conclusions: list[tuple[str, str]]
     weight: float
+    """Rule weight in [0, 1]; scales the firing strength."""
     """Firing-strength multiplier in [0, 1] (checked when the system runs)."""
     @property
     def clauses(self) -> list[list[Clause]]: ...
@@ -361,7 +384,9 @@ class Hedge:
 
     def __init__(self, power: float) -> None: ...
     @property
-    def power(self) -> float: ...
+    def power(self) -> float:
+        """Exponent of the hedge: ``μ ↦ μ^power``."""
+        ...
     def __call__(self, mu: float | tuple[float, float]) -> float | tuple[float, float]: ...
     @staticmethod
     def very() -> Hedge:
@@ -473,7 +498,11 @@ class FuzzySystem:
         no rule fired). Every input must be given.
 
         Raises ``ff.InputError`` (missing / unknown / NaN input), ``ff.ModelError``
-        (inconsistent rules)."""
+        (inconsistent rules).
+
+        >>> system.compute({"temp": 30})
+        {'fan': 56.078...}
+        """
         ...
     def __call__(self, inputs: Mapping[str, float]) -> dict[str, float]:
         """Shorthand for ``compute``."""
@@ -481,11 +510,20 @@ class FuzzySystem:
     def compute_batch(self, inputs: Mapping[str, ArrayLike]) -> dict[str, Any]:
         """Many rows at once: ``{input: column}`` (lists or NumPy arrays, equal length) →
         ``{output: column}`` as NumPy arrays (lists without NumPy). Runs on all CPU cores.
-        Rows where no rule fired are NaN."""
+        Rows where no rule fired are NaN.
+
+        >>> system.compute_batch({"temp": [10, 20, 30]})
+        {'fan': array([43.92..., 50.0, 56.07...])}
+        """
         ...
     def evaluate(self, values: Sequence[float]) -> list[float]:
         """Positional ``compute``: inputs in ``input_names()`` order, outputs in
-        ``output_names()`` order. The quickest call inside a simulation loop."""
+        ``output_names()`` order. The quickest call inside a simulation loop.
+
+        >>> for _ in range(steps):
+        ...     (fan,) = system.evaluate([temp])
+        ...     temp -= 0.01 * fan
+        """
         ...
     def compute_interval(self, inputs: Mapping[str, float]) -> dict[str, tuple[float, float]]:
         """Interval type-2: the type-reduced interval ``(y_l, y_r)`` per output (the crisp
@@ -495,7 +533,11 @@ class FuzzySystem:
     # Looking inside
     def rule_strengths(self, inputs: Mapping[str, float]) -> list[float]:
         """Firing strength of every rule, in rule order (after weights) — e.g. to fit
-        Sugeno consequents by least squares (ANFIS-style)."""
+        Sugeno consequents by least squares (ANFIS-style).
+
+        >>> system.rule_strengths({"temp": 30})    # cold, warm, hot
+        [0.0, 0.5, 0.5]
+        """
         ...
     def rule_strengths_interval(self, inputs: Mapping[str, float]) -> list[tuple[float, float]]:
         """Firing interval ``(lower, upper)`` of every rule (IT2)."""
@@ -513,7 +555,11 @@ class FuzzySystem:
     def validate(self) -> list[str]:
         """Every problem as text: ``"error: ..."`` lines (what ``check`` raises) then
         ``"warning: ..."`` lines (unused inputs, outputs no rule concludes, duplicate or
-        conflicting rules, terms that are zero over their whole range). Empty when clean."""
+        conflicting rules, terms that are zero over their whole range). Empty when clean.
+
+        >>> system.validate()
+        ["warning: input variable 'hum' is never used by any rule"]
+        """
         ...
     def input(self, name: str) -> Variable | None:
         """Copy of a registered input variable."""
@@ -521,9 +567,15 @@ class FuzzySystem:
     def output(self, name: str) -> Variable | None:
         """Copy of a registered output variable."""
         ...
-    def input_names(self) -> list[str]: ...
-    def output_names(self) -> list[str]: ...
-    def rule_count(self) -> int: ...
+    def input_names(self) -> list[str]:
+        """Names of the registered inputs, in the order they were added."""
+        ...
+    def output_names(self) -> list[str]:
+        """Names of the registered outputs, in the order they were added."""
+        ...
+    def rule_count(self) -> int:
+        """Number of rules in the rule base."""
+        ...
     def rules_str(self) -> list[str]:
         """All rules as parseable strings."""
         ...
@@ -534,21 +586,37 @@ class FuzzySystem:
 
     # Settings (canonical names)
     @property
-    def and_method(self) -> str: ...
+    def and_method(self) -> str:
+        """T-norm combining clauses joined by AND (canonical name)."""
+        ...
     @property
-    def or_method(self) -> str: ...
+    def or_method(self) -> str:
+        """T-conorm combining OR-groups (canonical name)."""
+        ...
     @property
-    def defuzz_method(self) -> str: ...
+    def defuzz_method(self) -> str:
+        """Defuzzification method (canonical name)."""
+        ...
     @property
-    def implication(self) -> str: ...
+    def implication(self) -> str:
+        """``"mamdani"`` (clip consequents) or ``"larsen"`` (scale them)."""
+        ...
     @property
-    def type(self) -> str: ...
+    def type(self) -> str:
+        """Engine requested: ``"auto"``, ``"type1"`` or ``"it2"``."""
+        ...
     @property
-    def type_reduction(self) -> str: ...
+    def type_reduction(self) -> str:
+        """IT2 type reduction: ``"km"``, ``"cos"`` or ``"height"``."""
+        ...
     @property
-    def resolution(self) -> int: ...
+    def resolution(self) -> int:
+        """Sampling steps over each output range."""
+        ...
     @property
-    def clamp_inputs(self) -> bool: ...
+    def clamp_inputs(self) -> bool:
+        """True when inputs are clipped into each variable's range first."""
+        ...
     @property
     def is_it2(self) -> bool:
         """True when the interval type-2 engine runs."""

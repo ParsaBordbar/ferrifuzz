@@ -3,6 +3,23 @@
 All notable changes to ferrifuzz. Versions follow [semver](https://semver.org); while the
 version is 0.x, minor releases may change the API.
 
+## 0.2.1 — unreleased
+
+### Editor support
+- Type information is complete (`pyright --verifytypes ferrifuzz --ignoreexternal`: 100%, checked
+  in CI): `ff.plot` is visible to editors, `ferrifuzz.plot` functions return `Axes`,
+  `fts.Partition.mf` is typed, and every public method and property has a docstring — in the
+  stubs (VS Code / Pylance) and at runtime (`help()`, Jupyter `?`, PyCharm).
+- Option names (`and_method=`, `defuzz_method=`, ...) complete to canonical names only; aliases
+  still work.
+- `compute`, `compute_batch`, `evaluate`, `rule_strengths`, `validate`, `automf` and `fuzzify`
+  docstrings show examples.
+- `help(ff.Variable.automf)` shows `names=3` instead of `names=Ellipsis`; `ff.mf` has a docstring.
+- VS Code extension: completion of variables, terms, hedges and keywords inside rule strings;
+  warnings with quick fixes for unknown terms, misspelled variables and inputs / outputs on the
+  wrong side of THEN; a warning (with *Use .venv* / *Select Interpreter*) when the selected
+  interpreter has no ferrifuzz or one older than 0.2.0.
+
 ## 0.2.0 — unreleased
 
 ### Highlights

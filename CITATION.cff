@@ -6,7 +6,7 @@ authors:
   - family-names: Bordbar
     given-names: Parsa
     email: parsab71@gmail.com
-version: 0.2.0
+version: 0.2.1
 date-released: 2026-10-04
 license: Apache-2.0
 repository-code: "https://github.com/ParsaBordbar/ferrifuzz"

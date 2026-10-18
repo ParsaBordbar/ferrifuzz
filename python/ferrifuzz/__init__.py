@@ -20,6 +20,8 @@ Submodules: ``ferrifuzz.fts`` (fuzzy time series), ``ferrifuzz.metrics`` (RMSE/M
 ``ferrifuzz.plot`` (matplotlib helpers, optional).
 """
 
+from typing import TYPE_CHECKING, Any
+
 from ._core import (
     FuzzySystem,
     Variable,
@@ -45,6 +47,10 @@ from ._core import (
 from . import fts
 from . import metrics
 
+if TYPE_CHECKING:
+    # Editors and type checkers see `ff.plot`; at runtime it loads lazily (below).
+    from . import plot as plot
+
 try:
     from importlib.metadata import version as _version
 
@@ -53,7 +59,7 @@ except Exception:  # pragma: no cover - running from a source tree without metad
     __version__ = "unknown"
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     # `ff.plot` imports matplotlib only when first used.
     if name == "plot":
         import importlib

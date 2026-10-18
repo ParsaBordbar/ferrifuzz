@@ -191,6 +191,7 @@ impl PyIT2MF {
         self.0.center()
     }
 
+    /// `(upper_shape, lower_shape)` names.
     fn shapes(&self) -> (&'static str, &'static str) {
         (self.0.upper().shape(), self.0.lower().shape())
     }

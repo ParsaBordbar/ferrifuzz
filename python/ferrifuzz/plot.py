@@ -12,9 +12,12 @@ Every function draws on ``ax`` (a new figure when omitted) and returns the axes.
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Optional
+from typing import TYPE_CHECKING, Any, Mapping, Optional
 
 import ferrifuzz as ff
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["plot_variable", "plot_output", "plot_response", "plot_surface"]
 
@@ -52,7 +55,7 @@ def _defaults(system: "ff.FuzzySystem", fixed: Optional[Mapping[str, float]]) ->
     return values
 
 
-def plot_variable(var: "ff.Variable", ax: Any = None, n: int = 400, legend: bool = True):
+def plot_variable(var: "ff.Variable", ax: Any = None, n: int = 400, legend: bool = True) -> Axes:
     """Plot every term of a variable; interval type-2 terms are drawn as a shaded band."""
     _, np = _pyplot()
     ax = _axes(ax)
@@ -75,7 +78,7 @@ def plot_variable(var: "ff.Variable", ax: Any = None, n: int = 400, legend: bool
     return ax
 
 
-def plot_output(system: "ff.FuzzySystem", inputs: Mapping[str, float], output: str, ax: Any = None):
+def plot_output(system: "ff.FuzzySystem", inputs: Mapping[str, float], output: str, ax: Any = None) -> Axes:
     """Show how an output is formed for one input row.
 
     Mamdani: the output terms (faint), the aggregated set (filled) and the crisp value.
@@ -111,7 +114,7 @@ def plot_response(
     fixed: Optional[Mapping[str, float]] = None,
     n: int = 200,
     ax: Any = None,
-):
+) -> Axes:
     """Plot ``output`` against one input; the other inputs sit at ``fixed`` (default: mid-range)."""
     _, np = _pyplot()
     values = _defaults(system, fixed)
@@ -141,7 +144,7 @@ def plot_surface(
     n: int = 40,
     ax: Any = None,
     cmap: str = "viridis",
-):
+) -> Axes:
     """3-D control surface of ``output`` over two inputs (others at ``fixed`` / mid-range)."""
     _, np = _pyplot()
     values = _defaults(system, fixed)

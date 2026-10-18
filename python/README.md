@@ -123,7 +123,7 @@ If ferrifuzz helps your coursework, thesis or paper, please cite it:
 @software{bordbar_ferrifuzz,
   author  = {Bordbar, Parsa},
   title   = {ferrifuzz: fast fuzzy logic for Python and Rust},
-  version = {0.2.0},
+  version = {0.2.1},
   year    = {2026},
   url     = {https://github.com/ParsaBordbar/ferrifuzz}
 }

@@ -87,6 +87,7 @@ impl PyHedge {
         Self(Hedge::new(power))
     }
 
+    /// Exponent of the hedge: `μ ↦ μ^power`.
     #[getter]
     fn power(&self) -> f64 {
         self.0.power()

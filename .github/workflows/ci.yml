@@ -44,3 +44,37 @@ jobs:
           .venv/bin/maturin develop --release
           .venv/bin/pytest -q
           for f in examples/python/*.py; do .venv/bin/python "$f" > /dev/null; done
+
+  # What editors see: pyright scores the installed package's public API (types + docstrings).
+  # A real wheel, not `maturin develop` — verifytypes does not follow editable installs.
+  typing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Type completeness of the public API
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install maturin pyright
+          .venv/bin/maturin build --release --out dist
+          .venv/bin/pip install --no-deps dist/*.whl
+          cd /tmp && VIRTUAL_ENV=$GITHUB_WORKSPACE/.venv $GITHUB_WORKSPACE/.venv/bin/pyright --verifytypes ferrifuzz --ignoreexternal
+
+  vscode:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editors/vscode
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: npm ci
+      - run: npm test

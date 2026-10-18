@@ -1,4 +1,4 @@
-# Releasing ferrifuzz 0.2.0
+# Releasing ferrifuzz
 
 Your checklist, then step-by-step: TestPyPI → PyPI → getting testers (and your professor) on it.
 
@@ -38,7 +38,7 @@ Your checklist, then step-by-step: TestPyPI → PyPI → getting testers (and yo
 - [ ] PyPI account with 2FA → API token (start with an account-wide token; after the first
   upload, replace it with one scoped to the `ferrifuzz` project).
 - [ ] Upload, check https://pypi.org/project/ferrifuzz/, `pip install ferrifuzz` in a clean venv.
-- [ ] Tag: `git tag v0.2.0 && git push --tags`.
+- [ ] Tag: `git tag v0.2.1 && git push --tags`.
 
 ### Testers (section 4)
 - [ ] Docs: pick hosting, set `url` in `ferrifuzzDocsWebsite/docusaurus.config.ts`, deploy
@@ -50,7 +50,7 @@ Your checklist, then step-by-step: TestPyPI → PyPI → getting testers (and yo
 - [ ] Rust crate on crates.io: `cargo publish -p ferrifuzz --dry-run`, then without `--dry-run`.
   This publishes the Rust source.
 - [ ] VS Code Marketplace / Open VSX for the extension (needs a publisher account). Until then,
-  share `editors/vscode/ferrifuzz-vscode-0.2.0.vsix`.
+  share `editors/vscode/ferrifuzz-vscode-0.2.1.vsix`.
 
 ---
 
@@ -69,21 +69,21 @@ reaches `pip install ferrifuzz`.
 uvx twine upload --repository-url https://test.pypi.org/legacy/ \
     -u __token__ -p 'pypi-YOUR-TESTPYPI-TOKEN' dist/*.whl
 ```
-Check https://test.pypi.org/project/ferrifuzz/: version 0.2.0, the README rendered, four wheels.
+Check https://test.pypi.org/project/ferrifuzz/: version 0.2.1, the README rendered, four wheels.
 
 **Install it like a user**, in a fresh environment. `--extra-index-url` lets pip get numpy and
 matplotlib from the real PyPI, because TestPyPI doesn't host them:
 ```sh
 python3 -m venv /tmp/ff-test && source /tmp/ff-test/bin/activate
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ \
-    "ferrifuzz[plot]==0.2.0"
+    "ferrifuzz[plot]==0.2.1"
 ```
 
 **5-minute check**
 ```sh
 python - <<'EOF'
 import ferrifuzz as ff
-print(ff.__version__)                                   # 0.2.0
+print(ff.__version__)                                   # 0.2.1
 temp = ff.Variable("temp", 0, 40).automf(["cold", "warm", "hot"])
 fan = ff.Variable("fan", 0, 100).automf(["slow", "medium", "fast"])
 s = ff.FuzzySystem(); s.add_input(temp); s.add_output(fan)
@@ -100,9 +100,9 @@ EOF
 For the full test suite against the installed wheel: copy `tests/python` from the repo and run
 `pip install pytest && pytest tests/python`.
 
-**Found a bug?** Fix it, bump the version (`version = "0.2.1"` in `Cargo.toml`), rebuild and
-upload again. 0.2.0 can't be replaced. To rehearse without spending real numbers, use
-pre-release versions on TestPyPI (`0.2.0-rc.1` in Cargo.toml becomes `0.2.0rc1`; install with
+**Found a bug?** Fix it, bump the version (`version = "0.2.2"` in `Cargo.toml`), rebuild and
+upload again. A version already uploaded can't be replaced. To rehearse without spending real numbers, use
+pre-release versions on TestPyPI (`0.2.2-rc.1` in Cargo.toml becomes `0.2.2rc1`; install with
 `pip install --pre ...`).
 
 ---
@@ -122,7 +122,7 @@ Same steps against the real index:
    `ParsaBordbar/ferrifuzz`, workflow `release.yml`, environment `pypi`). From then on, release
    from GitHub with *Actions → Release wheels → Run workflow → publish: pypi*. The workflow tests
    every wheel before it uploads. Use environment `testpypi` the same way for TestPyPI.
-5. `git tag v0.2.0 && git push --tags` and move the CHANGELOG entry from "unreleased" to the date.
+5. `git tag v0.2.1 && git push --tags` and move the CHANGELOG entry from "unreleased" to the date.
 
 **Platforms covered:** Windows x64, macOS (Intel and Apple Silicon), Linux x86_64 and ARM64
 (manylinux2014, i.e. glibc ≥ 2.17), CPython 3.9 and newer. Not covered: Windows ARM, Alpine/musl
@@ -137,7 +137,7 @@ What to send:
 - **The docs.** Run `npm run build` in `ferrifuzzDocsWebsite`, then either:
   - host it on Netlify / Vercel / GitHub Pages (that makes it public), or
   - zip `build/` and send it; the reader runs `npx serve build`.
-- **The VS Code extension** — `editors/vscode/ferrifuzz-vscode-0.2.0.vsix`
+- **The VS Code extension** — `editors/vscode/ferrifuzz-vscode-0.2.1.vsix`
   (install with *Extensions → … → Install from VSIX*).
 - **Feedback channel** — your repo stays private, so use a Google Form or email. Ask for:
   what they tried, what confused them, any wrong results, and what they would need to use it in
