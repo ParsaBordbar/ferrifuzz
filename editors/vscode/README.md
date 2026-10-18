@@ -144,7 +144,7 @@ Edit snippets in `tools/build_snippets.py`, not in the generated JSON.
 Bump `version` here and in `CHANGELOG.md`, run `npm test`, then:
 
 ```sh
-npx vsce login ParsaBordbar      # once; Azure DevOps token with Marketplace → Manage scope
+npx vsce login ParsaBordbar2003  # once; Azure DevOps token with Marketplace → Manage scope
 npm run publish:vsce             # VS Code Marketplace
 OVSX_PAT=... npm run publish:ovsx   # Open VSX (Cursor, VSCodium, Windsurf); token from open-vsx.org
 ```

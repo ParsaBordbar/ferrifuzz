@@ -3,7 +3,7 @@
   "displayName": "Ferrifuzz",
   "description": "Syntax highlighting, completion and checks for ferrifuzz fuzzy-rule strings in Python, snippets for the ferrifuzz Python API, and a check that the selected interpreter can provide ferrifuzz completions.",
   "version": "0.2.1",
-  "publisher": "ParsaBordbar",
+  "publisher": "ParsaBordbar2003",
   "license": "Apache-2.0",
   "icon": "images/icon.png",
   "galleryBanner": {
