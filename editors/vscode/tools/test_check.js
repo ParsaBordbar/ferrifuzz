@@ -1,5 +1,4 @@
-// Tests check.js against throwaway venvs with fake ferrifuzz metadata (no network, no build).
-// Run: npm run test:check   (needs python3 with the venv module on PATH)
+// Tests check.js against throwaway venvs with fake ferrifuzz metadata. Run: npm run test:check
 
 const assert = require("assert/strict");
 const { execFileSync } = require("child_process");

@@ -1,9 +1,4 @@
-// Rule-string intelligence, free of the `vscode` module so it runs (and is tested) under plain node.
-//
-// A Python file is read with regexes, not executed: variables come from `X = ff.Variable("name", ...)`,
-// terms from `X["term"] = ...` and `.automf(...)`, inputs / outputs from `add_input` / `add_output`.
-// Anything the scan cannot follow (a term set from a variable, a Variable from another module)
-// makes it stay quiet rather than guess.
+// Rule-string completion and checks from a regex scan of the file; silent wherever the scan cannot follow. No `vscode` import, so node tests run it.
 
 const KEYWORDS = ["IF", "THEN", "AND", "OR", "IS", "NOT", "WITH"];
 const HEDGES = ["very", "extremely", "somewhat", "more_or_less", "slightly", "plus", "minus"];
@@ -26,11 +21,7 @@ function defaultTermNames(n) {
 
 // ─── Python strings ──────────────────────────────────────────────────────────
 
-/**
- * Every string literal in `text` as {open, start, end, close, content, prefix, triple}:
- * `start`/`end` delimit the content, `open`/`close` the whole literal with prefix and quotes. An unterminated one-line string runs to the end
- * of its line, so the string being typed is found too. Comments are skipped.
- */
+/** String literals {open, start, end, close, content, prefix, triple}, comments skipped; an unterminated one runs to end of line. */
 function findStrings(text) {
   const out = [];
   let i = 0;
@@ -74,12 +65,7 @@ function findStrings(text) {
   return out;
 }
 
-/**
- * Rule candidates: one-line strings, and each line of a triple-quoted string, as
- * {offset, text, toSystem}. `toSystem` is true when the string visibly goes into a system:
- * `system += "..."`, `add_rule("...")`, `add_rules([...])`, or a constant later passed to those.
- * Strings elsewhere (e.g. `Rule.from_string` in a parser test) may name variables on purpose.
- */
+/** Rule candidates {offset, text, toSystem}; toSystem when the string visibly goes into a system (`+=`, `add_rule`, `add_rules`). */
 function ruleTexts(text) {
   const out = [];
   const strings = findStrings(text);
@@ -150,12 +136,7 @@ function automfTerms(args) {
   return null;
 }
 
-/**
- * Variables, terms, inputs and outputs a Python file defines:
- * {vars: Map(name → {terms: string[], known: boolean}), inputs: Set, outputs: Set, closed: boolean}.
- * `known` is false when some terms come from code the scan cannot read; `closed` is true when the
- * file registers inputs / outputs and the scan resolved every one of them.
- */
+/** {vars: Map(name → {terms, known}), inputs, outputs, closed}: what the file defines; known / closed are false where the scan cannot follow. */
 function scanModel(text) {
   const vars = new Map();
   const identToName = new Map();
@@ -234,8 +215,7 @@ function tokenize(s) {
   return toks;
 }
 
-/** Closest candidate within a small edit distance, for "did you mean" — same limits as
- * `did_you_mean` in crates/ferrifuzz/src/error.rs. */
+/** Closest candidate for "did you mean", with the same limits as `did_you_mean` in crates/ferrifuzz/src/error.rs. */
 function closest(word, candidates) {
   const dist = (a, b) => {
     const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
@@ -277,12 +257,7 @@ function clauses(toks) {
   return out;
 }
 
-/**
- * Problems in one rule string as {start, end, message} (offsets into `rule`). Only what the
- * file pins down is judged: an unknown variable only when it looks like a typo of a defined one
- * and the scan followed every input and output (`closed`) — a rule may be parsed on its own
- * with names defined nowhere — and an unknown term only when every term of its variable is known.
- */
+/** Problems {start, end, message} in one rule; judges only what the file pins down (likely typos, fully known term sets). */
 function checkRule(rule, model) {
   const problems = [];
   const names = [...model.vars.keys()];
@@ -348,12 +323,7 @@ function rulePrefixAt(text, offset) {
   return null;
 }
 
-/**
- * What can come next in a rule whose text so far is `prefix`:
- * {kind, partial, variable?, consequent, lower} where kind is
- * "keyword-if" | "variable" | "is" | "term" | "after-term" | "weight".
- * `partial` is the word being typed; `lower` is true when the rule writes keywords in lower case.
- */
+/** What can follow `prefix`: {kind, partial, variable?, consequent, lower}; kind: keyword-if | variable | is | term | after-term | weight. */
 function ruleContext(prefix) {
   const toks = tokenize(prefix);
   let partial = "";
@@ -392,10 +362,7 @@ function ruleContext(prefix) {
   return { ...base, kind: "after-term" };
 }
 
-/**
- * Completion items for the rule text `prefix` as {label, kind, detail}; kind is
- * "keyword" | "variable" | "hedge" | "term". Empty when nothing sensible follows.
- */
+/** Completion items {label, kind, detail} for the rule text `prefix`; kind: keyword | variable | hedge | term. */
 function completions(prefix, model) {
   const ctx = ruleContext(prefix);
   const kw = (w) => ({ label: ctx.lower ? w.toLowerCase() : w, kind: "keyword", detail: "rule keyword" });

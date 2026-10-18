@@ -4,7 +4,16 @@
   "description": "Syntax highlighting, completion and checks for ferrifuzz fuzzy-rule strings in Python, snippets for the ferrifuzz Python API, and a check that the selected interpreter can provide ferrifuzz completions.",
   "version": "0.2.1",
   "publisher": "ParsaBordbar",
-  "license": "SEE LICENSE IN README.md",
+  "license": "Apache-2.0",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#0f1220",
+    "theme": "dark"
+  },
+  "homepage": "https://github.com/ParsaBordbar/ferrifuzz/tree/main/editors/vscode#readme",
+  "bugs": {
+    "url": "https://github.com/ParsaBordbar/ferrifuzz/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/ParsaBordbar/ferrifuzz"
@@ -14,14 +23,17 @@
   },
   "categories": [
     "Programming Languages",
-    "Snippets"
+    "Snippets",
+    "Linters"
   ],
   "keywords": [
     "fuzzy",
     "fuzzy logic",
     "ferrifuzz",
     "mamdani",
-    "sugeno"
+    "sugeno",
+    "type-2",
+    "control"
   ],
   "main": "./extension.js",
   "activationEvents": [
@@ -80,11 +92,13 @@
     "build:snippets": "python3 tools/build_snippets.py",
     "test:snippets": "MPLBACKEND=Agg python3 tools/test_snippets.py",
     "test:grammar": "node tools/test_grammar.mjs",
-    "package": "vsce package --skip-license",
+    "package": "vsce package",
     "test:check": "node tools/test_check.js",
     "test:rules": "node tools/test_rules.js",
     "test": "npm run test:check && npm run test:rules && npm run test:extension",
-    "test:extension": "node tools/test_extension.js"
+    "test:extension": "node tools/test_extension.js",
+    "publish:vsce": "vsce publish",
+    "publish:ovsx": "npx --yes ovsx publish"
   },
   "devDependencies": {
     "@vscode/vsce": "^3.0.0",

@@ -10,16 +10,7 @@ from __future__ import annotations
 from typing import Any, Iterator, Literal, Mapping, Sequence, Union, overload
 
 # ─── Option names ────────────────────────────────────────────────────────────
-# The Literal part drives editor completion and lists canonical names only; ``| str``
-# keeps aliases and names held in plain ``str`` variables type-correct. Accepted aliases:
-#   t-norm: godel / zadeh / standard (min), prod / algebraic (product), luk / bounded (lukasiewicz)
-#   t-conorm: godel / zadeh / standard (max), prob / probabilistic / algebraic (probor), luk / bounded
-#   defuzz: cog / coa (centroid), sugeno / wtaver (weighted_average), mean_of_maximum, ...
-#   inference: t1 / type-1 / mamdani / sugeno (type1), type2 / type-2 / interval (it2)
-#   implication: min (mamdani), product / prod (larsen); complement: zadeh (standard)
-#   type reduction: karnik_mendel (km), center_of_sets (cos); shape: triangular, gauss, ...
-# At runtime an unknown name raises FuzzyError listing the valid options (and suggesting
-# the closest one).
+# Literals list canonical names for completion; `| str` keeps aliases (crates/ferrifuzz/src/names.rs) type-correct.
 
 TNormName = Union[Literal["min", "product", "lukasiewicz", "drastic", "einstein", "hamacher"], str]
 TConormName = Union[Literal["max", "probor", "lukasiewicz", "drastic", "einstein", "hamacher"], str]

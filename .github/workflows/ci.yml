@@ -45,8 +45,7 @@ jobs:
           .venv/bin/pytest -q
           for f in examples/python/*.py; do .venv/bin/python "$f" > /dev/null; done
 
-  # What editors see: pyright scores the installed package's public API (types + docstrings).
-  # A real wheel, not `maturin develop` — verifytypes does not follow editable installs.
+  # Type completeness as editors see it; a real wheel, since verifytypes ignores editable installs.
   typing:
     runs-on: ubuntu-latest
     steps:

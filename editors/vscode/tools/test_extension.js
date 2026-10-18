@@ -1,5 +1,4 @@
-// Loads extension.js against a minimal fake `vscode` module and drives the rule-string
-// completion, diagnostics and quick fixes the way VS Code would. Run: npm run test:extension
+// Drives extension.js against a fake `vscode` module. Run: npm run test:extension
 
 const assert = require("assert/strict");
 const Module = require("module");

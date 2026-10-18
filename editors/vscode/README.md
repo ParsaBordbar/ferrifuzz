@@ -1,6 +1,11 @@
 # Ferrifuzz for VS Code
 
-Editor support for the [ferrifuzz](https://github.com/ParsaBordbar/ferrifuzz) Python API.
+Editor support for [ferrifuzz](https://github.com/ParsaBordbar/ferrifuzz), fuzzy logic for Python
+with a Rust core: rule-string highlighting, completion and checks, snippets, and a check that
+VS Code's Python interpreter can see ferrifuzz.
+
+Needs the [Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+and ferrifuzz 0.2.0 or newer in the interpreter VS Code uses (`pip install ferrifuzz`).
 
 ## Rule highlighting
 
@@ -114,16 +119,15 @@ runs once per interpreter per session. It needs the Python extension (`ms-python
 
 ## Install
 
-```sh
-cd editors/vscode
-npm install
-npm run package                                  # → ferrifuzz-vscode-<version>.vsix
-code --install-extension ferrifuzz-vscode-*.vsix
-```
+Search for **Ferrifuzz** in the Extensions view: the VS Code Marketplace, or Open VSX in
+Cursor, VSCodium and Windsurf. From a `.vsix` file: *Extensions → ⋯ → Install from VSIX…*, or
+`code --install-extension ferrifuzz-vscode-<version>.vsix`.
 
 ## Development
 
 ```sh
+npm install
+npm run package          # → ferrifuzz-vscode-<version>.vsix
 npm run build:snippets   # regenerate snippets/python.code-snippets from tools/build_snippets.py
 npm run test:snippets    # expand every snippet with its defaults and execute it (needs ferrifuzz, numpy, matplotlib)
 npm run test:grammar     # tokenize tools/grammar_sample.py with VS Code's Python grammar + the injection
@@ -134,3 +138,13 @@ npm run test:extension   # extension.js against a fake vscode module
 ```
 
 Edit snippets in `tools/build_snippets.py`, not in the generated JSON.
+
+### Publishing
+
+Bump `version` here and in `CHANGELOG.md`, run `npm test`, then:
+
+```sh
+npx vsce login ParsaBordbar      # once; Azure DevOps token with Marketplace → Manage scope
+npm run publish:vsce             # VS Code Marketplace
+OVSX_PAT=... npm run publish:ovsx   # Open VSX (Cursor, VSCodium, Windsurf); token from open-vsx.org
+```

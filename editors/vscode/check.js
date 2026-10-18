@@ -10,8 +10,7 @@ const MIN_VERSION = "0.2.0";
 /** Matches `import ferrifuzz`, `import ferrifuzz as ff`, `from ferrifuzz import ...`, `from ferrifuzz.fts import ...`. */
 const IMPORT_RE = /^[ \t]*(?:import[ \t]+ferrifuzz\b|from[ \t]+ferrifuzz\b)/m;
 
-// Reads the installed version from metadata only: never loads the native extension, so a
-// broken or wrong-arch build still reports its version. Exit 3 means "not installed".
+// Reads metadata only, never imports the native module; exit 3 = not installed.
 const PROBE = [
   "import sys",
   "try:",
@@ -48,10 +47,7 @@ function compareVersions(a, b) {
   return 0;
 }
 
-/**
- * Ask `python` which ferrifuzz it has.
- * Resolves to {status: "ok" | "old" | "missing" | "error", version?, detail?}.
- */
+/** Which ferrifuzz `python` has: {status: ok | old | missing | error, version?, detail?}. */
 function probe(python, { timeoutMs = 10000, minVersion = MIN_VERSION } = {}) {
   return new Promise((resolve) => {
     execFile(python, ["-I", "-c", PROBE], { timeout: timeoutMs, windowsHide: true }, (err, stdout, stderr) => {

@@ -1,5 +1,4 @@
-"""Editor support: every public object has a runtime docstring (help(), Jupyter ``?``,
-PyCharm) and the type stubs (VS Code / Pylance hover and completion) list the same names."""
+"""Runtime docstrings exist for every public object and the stubs list the same names."""
 
 import ast
 import inspect

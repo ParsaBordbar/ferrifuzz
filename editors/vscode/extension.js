@@ -1,6 +1,4 @@
-// Warns when a Python file imports ferrifuzz but the selected interpreter cannot provide
-// completions for it (ferrifuzz missing, or older than the release that ships type stubs),
-// and adds completion, checks and quick fixes inside rule strings.
+// Interpreter check for ferrifuzz, plus completion, checks and quick fixes inside rule strings.
 
 const vscode = require("vscode");
 const path = require("path");
@@ -38,11 +36,7 @@ function shouldCheck(doc) {
   return doc.languageId === "python" && (doc.uri.scheme === "file" || doc.uri.scheme === "untitled") && check.importsFerrifuzz(doc.getText());
 }
 
-/**
- * @param {vscode.ExtensionContext} context
- * @param {vscode.TextDocument} doc
- * @param {boolean} manual  run from the command: always report, even when fine or muted
- */
+/** Check `doc`'s interpreter; `manual` (from the command) always reports, even when fine or muted. */
 async function checkDocument(context, doc, manual) {
   if (!manual && (!enabled() || !shouldCheck(doc))) return;
   const api = await getPythonApi();
