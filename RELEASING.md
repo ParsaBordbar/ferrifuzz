@@ -50,7 +50,7 @@ Your checklist, then step-by-step: TestPyPI → PyPI → getting testers (and yo
 - [ ] Rust crate on crates.io: `cargo publish -p ferrifuzz --dry-run`, then without `--dry-run`.
   This publishes the Rust source.
 - [ ] VS Code Marketplace / Open VSX for the extension (needs a publisher account). Until then,
-  share `editors/vscode/ferrifuzz-vscode-0.2.1.vsix`.
+  share `editors/vscode/ferrifuzz-0.2.1.vsix`.
 
 ---
 
@@ -137,7 +137,7 @@ What to send:
 - **The docs.** Run `npm run build` in `ferrifuzzDocsWebsite`, then either:
   - host it on Netlify / Vercel / GitHub Pages (that makes it public), or
   - zip `build/` and send it; the reader runs `npx serve build`.
-- **The VS Code extension** — `editors/vscode/ferrifuzz-vscode-0.2.1.vsix`
+- **The VS Code extension** — `editors/vscode/ferrifuzz-0.2.1.vsix`
   (install with *Extensions → … → Install from VSIX*).
 - **Feedback channel** — your repo stays private, so use a Google Form or email. Ask for:
   what they tried, what confused them, any wrong results, and what they would need to use it in

@@ -121,13 +121,13 @@ runs once per interpreter per session. It needs the Python extension (`ms-python
 
 Search for **Ferrifuzz** in the Extensions view: the VS Code Marketplace, or Open VSX in
 Cursor, VSCodium and Windsurf. From a `.vsix` file: *Extensions → ⋯ → Install from VSIX…*, or
-`code --install-extension ferrifuzz-vscode-<version>.vsix`.
+`code --install-extension ferrifuzz-<version>.vsix`.
 
 ## Development
 
 ```sh
 npm install
-npm run package          # → ferrifuzz-vscode-<version>.vsix
+npm run package          # → ferrifuzz-<version>.vsix
 npm run build:snippets   # regenerate snippets/python.code-snippets from tools/build_snippets.py
 npm run test:snippets    # expand every snippet with its defaults and execute it (needs ferrifuzz, numpy, matplotlib)
 npm run test:grammar     # tokenize tools/grammar_sample.py with VS Code's Python grammar + the injection
