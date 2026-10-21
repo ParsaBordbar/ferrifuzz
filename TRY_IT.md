@@ -7,7 +7,7 @@ plotting helpers. Thank you for testing it. Your feedback decides what changes n
 ## 1. Install (2 minutes)
 
 You need **Python 3.9 or newer** (`python3 --version`) on Windows x64, macOS or Linux.
-No Rust or compiler needed. The 0.2.0 pre-release is on **TestPyPI**, a sandbox copy of
+No Rust or compiler needed. The 0.2.1 pre-release is on **TestPyPI**, a sandbox copy of
 PyPI, so plain `pip install ferrifuzz` does not find it yet.
 
 macOS / Linux:
@@ -17,7 +17,7 @@ python3 -m venv ff
 source ff/bin/activate
 python -m pip install --upgrade pip
 pip install numpy matplotlib                                      # from the normal PyPI
-pip install -i https://test.pypi.org/simple/ "ferrifuzz==0.2.0"   # from TestPyPI
+pip install -i https://test.pypi.org/simple/ "ferrifuzz==0.2.1"   # from TestPyPI
 ```
 
 Windows (PowerShell):
@@ -27,7 +27,7 @@ py -m venv ff
 ff\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install numpy matplotlib
-pip install -i https://test.pypi.org/simple/ "ferrifuzz==0.2.0"
+pip install -i https://test.pypi.org/simple/ "ferrifuzz==0.2.1"
 ```
 
 With [uv](https://docs.astral.sh/uv/) instead: `uv venv ff`, activate it as above, then the
@@ -36,12 +36,12 @@ same two installs as `uv pip install ...`.
 Check it worked:
 
 ```sh
-python -c "import ferrifuzz as ff; print(ff.__version__)"        # 0.2.0
+python -c "import ferrifuzz as ff; print(ff.__version__)"        # 0.2.1
 ```
 
 If it fails:
 - `ferrifuzz==0.1.0 depends on Python>=3.13` or `No matching distribution`: keep the
-  `==0.2.0`, upgrade pip (line 3 above); with uv add `--refresh`.
+  `==0.2.1`, upgrade pip (line 3 above); with uv add `--refresh`.
 - `No module named ferrifuzz`: the `ff` environment is not active in this terminal or editor.
 - PowerShell refuses `Activate.ps1`: run
   `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use `ff\Scripts\activate.bat` in cmd.
@@ -49,6 +49,11 @@ If it fails:
 
 Optional, for VS Code: install the `.vsix` you received (*Extensions → … → Install from
 VSIX*). It adds colour to rule strings and snippets (type `ffmamdani` + Tab).
+
+No completions or hover docs for `ff.`? Your editor is using a different Python. In VS Code:
+*Cmd/Ctrl+Shift+P → Python: Select Interpreter →* the `ff` environment (PyCharm: *Settings →
+Python Interpreter*). Same rule as for numpy: the editor only sees packages in the
+interpreter it is set to.
 
 ## 2. A Mamdani controller (3 minutes)
 

@@ -25,7 +25,7 @@ _PARTITIONERS = ("equal_width",)
 class Partition:
     """A single fuzzy linguistic term in the FTS universe."""
 
-    def __init__(self, label: str, mf, center: float) -> None:
+    def __init__(self, label: str, mf: ff.Type1MF, center: float) -> None:
         self.label = label
         self.mf = mf
         self.center = center
