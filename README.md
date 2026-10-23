@@ -45,8 +45,9 @@ print(system({"service": 7.5}))     # {'tip': 22.6...}
 print(system.validate())           # [] — or "error: ..." / "warning: ..." lines
 ```
 
-More in [`examples/python/`](examples/python). Editor support (rule highlighting + snippets)
-lives in [`editors/vscode/`](editors/vscode).
+More in [`examples/python/`](examples/python) and the [documentation](https://ferrifuzz.bubblelamp.space). The
+[VS Code extension](https://marketplace.visualstudio.com/items?itemName=ParsaBordbar2003.ferrifuzz) (rule-string completion, checks, highlighting, snippets) lives in
+[`editors/vscode/`](editors/vscode).
 
 ## Rust
 
@@ -99,7 +100,7 @@ uv venv && uv pip install maturin pytest numpy
 | `crates/ferrifuzz-python` | PyO3 bindings, built by maturin as `ferrifuzz._core` |
 | `python/ferrifuzz` | Python package: re-exports, `fts`, `metrics`, type stubs |
 | `examples/python`, `tests/python` | Python examples and pytest suite |
-| `editors/vscode` | VS Code extension: rule-string highlighting and snippets |
+| `editors/vscode` | VS Code extension: rule-string completion, checks, highlighting, snippets |
 
 ## License & citation
 

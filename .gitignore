@@ -31,6 +31,5 @@ htmlcov/
 
 # Local
 .env
-.env.local
-.claude/settings.local.json
+.env.*
 out.xml

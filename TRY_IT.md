@@ -47,8 +47,10 @@ If it fails:
   `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, or use `ff\Scripts\activate.bat` in cmd.
 - Please tell me your OS, `python --version` and the full error.
 
-Optional, for VS Code: install the `.vsix` you received (*Extensions → … → Install from
-VSIX*). It adds colour to rule strings and snippets (type `ffmamdani` + Tab).
+Optional, for VS Code: install **Ferrifuzz** from the Extensions view (search `ferrifuzz`, or
+[Marketplace page](https://marketplace.visualstudio.com/items?itemName=ParsaBordbar2003.ferrifuzz); in Cursor / VSCodium it comes from Open VSX). It completes and
+checks rule strings, colours them, and adds snippets (type `ffmamdani` + Tab). Full docs:
+[ferrifuzz.bubblelamp.space](https://ferrifuzz.bubblelamp.space).
 
 No completions or hover docs for `ff.`? Your editor is using a different Python. In VS Code:
 *Cmd/Ctrl+Shift+P → Python: Select Interpreter →* the `ff` environment (PyCharm: *Settings →

@@ -11,6 +11,8 @@ pip install "ferrifuzz[plot]"         # + numpy and matplotlib for ferrifuzz.plo
 
 Prebuilt wheels for Windows, macOS and Linux, Python 3.9+. No Rust needed.
 
+**Documentation:** [ferrifuzz.bubblelamp.space](https://ferrifuzz.bubblelamp.space) ([GitHub Pages mirror](https://parsabordbar.github.io/ferrifuzz_docs/)) · **VS Code extension:** [Ferrifuzz](https://marketplace.visualstudio.com/items?itemName=ParsaBordbar2003.ferrifuzz)
+
 ## A system in 15 lines
 
 ```python
@@ -111,9 +113,12 @@ print(model.predict(enrollments[-1:], steps=2))
 ## Editor support
 
 Type hints and docstrings ship with the package, so hover help and autocompletion of option
-names (`defuzz_method="` → `centroid`, `bisector`, ...) work in VS Code and PyCharm. The
-ferrifuzz VS Code extension adds rule-string highlighting and `ff…` snippets (`ffmamdani`,
-`ffsugeno`, `ffit2sys`, `fffts`, `ffplotvar`, ...).
+names (`defuzz_method="` → `centroid`, `bisector`, ...) work in VS Code, PyCharm and Jupyter.
+
+The **Ferrifuzz** extension ([VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ParsaBordbar2003.ferrifuzz); [Open VSX](https://open-vsx.org/?search=ferrifuzz) for Cursor,
+VSCodium and Windsurf) adds, inside rule strings, highlighting, completion of variables, terms
+and hedges, and "did you mean" warnings with quick fixes; plus `ff…` snippets (`ffmamdani`,
+`ffsugeno`, `ffit2sys`, ...) and a warning when the editor's Python interpreter has no ferrifuzz.
 
 ## Citing
 
