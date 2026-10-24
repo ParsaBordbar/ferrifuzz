@@ -40,6 +40,7 @@ jobs:
       - name: Build wheel and run pytest
         run: |
           python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip   # maturin develop needs pip >= 25.1 (--group)
           .venv/bin/pip install maturin pytest numpy
           .venv/bin/maturin develop --release
           .venv/bin/pytest -q
