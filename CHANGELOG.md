@@ -3,7 +3,7 @@
 All notable changes to ferrifuzz. Versions follow [semver](https://semver.org); while the
 version is 0.x, minor releases may change the API.
 
-## 0.2.1 — unreleased
+## 0.2.1 — 2026-10-24
 
 ### Editor support
 - Type information is complete (`pyright --verifytypes ferrifuzz --ignoreexternal`: 100%, checked
